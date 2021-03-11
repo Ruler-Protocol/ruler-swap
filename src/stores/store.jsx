@@ -252,7 +252,7 @@ class Store {
         emitter.emit(ERROR, err)
         return emitter.emit(SNACKBAR_ERROR, err)
       }
-
+      poolData = poolData.filter(p => p);
       store.setStore({ pools: poolData })
       return emitter.emit(CONFIGURE_RETURNED)
     })
@@ -286,8 +286,6 @@ class Store {
     if(!account || !account.address) {
       return false
     }
-
-    const web3 = await this._getWeb3Provider()
 
     return emitter.emit(BALANCES_RETURNED)
   }
@@ -325,6 +323,7 @@ class Store {
       const erc20Contract = new web3.eth.Contract(config.erc20ABI, pool.address)
 
       const symbol = await erc20Contract.methods.symbol().call()
+      if (!symbol.includes('RC_') && !symbol.includes('RR_')) return callback(null);
       const decimals = parseInt(await erc20Contract.methods.decimals().call())
       const name = await erc20Contract.methods.name().call()
 
