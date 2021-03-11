@@ -107,44 +107,6 @@ class Store {
             },
           ]
         },
-        {
-          id: 'BTC',
-          name: 'renBTC/wBTC/sBTC Pool',
-          erc20address: '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714',
-          balance: 0,
-          decimals: 18,
-          assets: [
-            {
-              index: 0,
-              id: 'renBTC',
-              name: 'renBTC',
-              symbol: 'renBTC',
-              description: 'renBTC',
-              erc20address: '0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D',
-              balance: 0,
-              decimals: 8,
-            },
-            {
-              index: 1,
-              id: 'WBTC',
-              name: 'Wrapped BTC',
-              symbol: 'WBTC',
-              description: 'Wrapped BTC',
-              erc20address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-              balance: 0,
-              decimals: 8,
-            },
-            {
-              id: 'sBTC',
-              name: 'Synth sBTC',
-              symbol: 'sBTC',
-              description: 'Synth sBTC',
-              erc20address: '0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6',
-              balance: 0,
-              decimals: 18,
-            },
-          ]
-        }
       ],
       connectorsByName: {
         MetaMask: injected,
@@ -281,17 +243,7 @@ class Store {
     }
 
     const web3 = await this._getWeb3Provider()
-    let poolsV1 = await this._getPools(web3)
-    let poolsV2 = await this._getPoolsV2(web3)
-
-    if(!poolsV2) {
-      poolsV2 = []
-    }
-    if(!poolsV1) {
-      poolsV1 = []
-    }
-
-    const pools = [...poolsV2, ...poolsV1]
+    const pools = (await this._getPoolsV2(web3)) || [];
 
     async.map(pools, (pool, callback) => {
       this._getPoolData(web3, pool, account, callback)
@@ -304,29 +256,6 @@ class Store {
       store.setStore({ pools: poolData })
       return emitter.emit(CONFIGURE_RETURNED)
     })
-  }
-
-  _getPools = async (web3) => {
-    try {
-      const curveFactoryContract = new web3.eth.Contract(config.curveFactoryABI, config.curveFactoryAddress)
-
-      const poolCount = await curveFactoryContract.methods.pool_count().call()
-
-      const pools = await Promise.all([...Array(parseInt(poolCount)).keys()].map(
-        i => curveFactoryContract.methods.pool_list(i).call()
-      ))
-
-      return pools.map((poolAddress) => {
-
-        return {
-          version: 1,
-          address: poolAddress
-        }
-      })
-    } catch (ex) {
-      emitter.emit(ERROR, ex)
-      emitter.emit(SNACKBAR_ERROR, ex)
-    }
   }
 
   _getPoolsV2 = async (web3) => {
@@ -407,12 +336,7 @@ class Store {
         .dividedBy(bnDecimals)
         .toFixed(decimals, BigNumber.ROUND_DOWN)
 
-      let curveFactoryContract = null
-      if(pool.version === 1) {
-        curveFactoryContract = new web3.eth.Contract(config.curveFactoryABI, config.curveFactoryAddress)
-      } else {
-        curveFactoryContract = new web3.eth.Contract(config.curveFactoryV2ABI, config.curveFactoryV2Address)
-      }
+      const curveFactoryContract = new web3.eth.Contract(config.curveFactoryV2ABI, config.curveFactoryV2Address);
       const poolBalances = await curveFactoryContract.methods.get_balances(pool.address).call()
       const isPoolSeeded = sumArray(poolBalances) !== 0
 
