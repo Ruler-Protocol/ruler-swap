@@ -2,6 +2,8 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+A fork of [crv.finance](https://github.com/andrecronje/crv.finance).
+
 ## Available Scripts
 
 In the project directory, you can run:
