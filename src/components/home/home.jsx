@@ -72,7 +72,7 @@ const styles = theme => ({
   zap: {
     backgroundColor: colors.white,
     '&:hover': {
-      backgroundColor: colors.blue,
+      backgroundColor: colors.pink,
       '& .title': {
         color: colors.white,
       },

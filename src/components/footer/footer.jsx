@@ -6,12 +6,12 @@ import { colors } from '../../theme'
 
 const styles = theme => ({
   footer: {
-    padding: '24px',
+    padding: '10px',
     display: 'flex',
     justifyContent: 'space-evenly',
     width: '100%',
     background: colors.white,
-    borderRadius: '50px 50px 0px 0px',
+    // borderRadius: '50px 50px 0px 0px',
     border: '1px solid '+colors.pink,
     borderBottom: 'none',
     marginTop: '48px',

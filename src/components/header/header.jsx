@@ -31,9 +31,9 @@ const styles = theme => ({
     border: '1px solid '+colors.pink,
     borderTop: 'none',
     width: '100%',
-    borderRadius: '0px 0px 50px 50px',
+    // borderRadius: '0px 0px 50px 50px',
     display: 'flex',
-    padding: '24px 32px',
+    padding: '20px 32px',
     alignItems: 'center',
     justifyContent: 'center',
     [theme.breakpoints.down('sm')]: {

@@ -320,7 +320,7 @@ function MyComponent(props) {
         <Button style={ {
             padding: '12px',
             backgroundColor: 'white',
-            borderRadius: '20px',
+            borderRadius: '10px',
             border: '1px solid #E1E1E1',
             fontWeight: 500,
             minWidth: '250px'

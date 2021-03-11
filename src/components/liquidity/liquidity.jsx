@@ -46,7 +46,7 @@ const styles = theme => ({
   inputContainer: {
     display: 'flex',
     padding: '30px',
-    borderRadius: '50px',
+    borderRadius: '10px',
     flexDirection: 'column',
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
@@ -80,7 +80,7 @@ const styles = theme => ({
   assetSelectIcon: {
     display: 'inline-block',
     verticalAlign: 'middle',
-    borderRadius: '25px',
+    borderRadius: '10px',
     background: '#dedede',
     height: '30px',
     width: '30px',
@@ -104,13 +104,12 @@ const styles = theme => ({
   },
   actionButton: {
     '&:hover': {
-      backgroundColor: "#2F80ED",
+      backgroundColor: colors.pink,
     },
     marginTop: '24px',
     padding: '12px',
-    backgroundColor: "#2F80ED",
-    borderRadius: '1rem',
-    border: '1px solid #E1E1E1',
+    backgroundColor: colors.darkPink,
+    borderRadius: '10px',
     fontWeight: 500,
     [theme.breakpoints.up('md')]: {
       padding: '15px',
@@ -125,7 +124,7 @@ const styles = theme => ({
     justifyContent: 'space-evenly',
     width: '100%',
     background: '#dedede',
-    borderRadius: '24px',
+    borderRadius: '10px',
     padding: '24px'
   },
   priceHeading: {
@@ -179,7 +178,7 @@ const styles = theme => ({
     border: '1px solid '+colors.pink,
     padding: '6px',
     width: 'fit-content',
-    borderRadius: '12px',
+    borderRadius: '10px',
     background: 'rgba(25, 101, 233, 0.5)',
     fontSize: '12px'
   },
@@ -187,7 +186,7 @@ const styles = theme => ({
     border: '1px solid '+colors.pink,
     padding: '6px',
     width: 'fit-content',
-    borderRadius: '12px',
+    borderRadius: '10px',
     background: 'rgba(25, 101, 233, 0.5)',
     fontSize: '12px'
   },

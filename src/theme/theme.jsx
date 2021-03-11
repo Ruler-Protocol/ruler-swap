@@ -136,7 +136,7 @@ const iswapTheme =  {
     MuiSelect: {
       select: {
         "&:focus": {
-          borderRadius: '50px'
+          borderRadius: '10px'
         },
         padding: '9px'
       },
@@ -148,7 +148,7 @@ const iswapTheme =  {
     },
     MuiButton: {
       root: {
-        borderRadius: '50px',
+        borderRadius: '10px',
         padding: '10px 24px'
       },
       outlined: {
@@ -189,11 +189,11 @@ const iswapTheme =  {
         },
         color: colors.text,
         padding: '14px',
-        borderRadius: '50px'
+        borderRadius: '10px'
       },
       root: {
         // border: "none !important",
-        borderRadius: '50px'
+        borderRadius: '10px'
       },
       notchedOutline: {
         // border: "none !important"
@@ -231,7 +231,7 @@ const iswapTheme =  {
     MuiAccordion: {
       root: {
         border: '1px solid '+colors.pink,
-        borderRadius: '50px',
+        borderRadius: '10px',
         margin: '8px 0px',
         '&:before': { //underline color when textfield is inactive
           backgroundColor: 'none',
@@ -260,7 +260,7 @@ const iswapTheme =  {
     },
     MuiToggleButton: {
       root: {
-        borderRadius: '50px',
+        borderRadius: '10px',
         textTransform: 'none',
         minWidth:  '100px',
         border: 'none',
@@ -293,7 +293,7 @@ const iswapTheme =  {
     MuiToggleButtonGroup: {
       root: {
         border: '1px solid '+colors.pink,
-        borderRadius: '50px',
+        borderRadius: '10px',
       },
       groupedSizeSmall: {
         padding: '42px 30px'
