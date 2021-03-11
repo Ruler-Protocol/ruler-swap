@@ -50,7 +50,7 @@ const styles = theme => ({
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
     margin: '40px 0px',
-    border: '1px solid '+colors.borderBlue,
+    border: '1px solid '+colors.pink,
     minWidth: '500px',
     background: colors.white
   },
@@ -180,7 +180,7 @@ const styles = theme => ({
   titleBalance: {
     padding: '20px 10px',
     borderRadius: '50px',
-    border: '1px solid '+colors.borderBlue,
+    border: '1px solid '+colors.pink,
     background: colors.white,
     display: 'flex',
     flexDirection: 'column',
@@ -199,7 +199,7 @@ const styles = theme => ({
     color: colors.darkGray
   },
   version1: {
-    border: '1px solid '+colors.borderBlue,
+    border: '1px solid '+colors.pink,
     padding: '6px',
     width: 'fit-content',
     borderRadius: '12px',
@@ -207,7 +207,7 @@ const styles = theme => ({
     fontSize: '12px'
   },
   version2: {
-    border: '1px solid '+colors.borderBlue,
+    border: '1px solid '+colors.pink,
     padding: '6px',
     width: 'fit-content',
     borderRadius: '12px',

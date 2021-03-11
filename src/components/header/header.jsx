@@ -28,7 +28,7 @@ const styles = theme => ({
   },
   headerV2: {
     background: colors.white,
-    border: '1px solid '+colors.borderBlue,
+    border: '1px solid '+colors.pink,
     borderTop: 'none',
     width: '100%',
     borderRadius: '0px 0px 50px 50px',
@@ -56,7 +56,7 @@ const styles = theme => ({
     cursor: 'pointer',
     '&:hover': {
       paddingBottom: '9px',
-      borderBottom: "3px solid "+colors.borderBlue,
+      borderBottom: "3px solid "+colors.pink,
     },
   },
   title: {
@@ -67,7 +67,7 @@ const styles = theme => ({
     margin: '0px 12px',
     cursor: 'pointer',
     paddingBottom: '9px',
-    borderBottom: "3px solid "+colors.borderBlue,
+    borderBottom: "3px solid "+colors.pink,
   },
   account: {
     display: 'flex',
@@ -86,14 +86,14 @@ const styles = theme => ({
     alignItems: 'center',
     cursor: 'pointer',
     '&:hover': {
-      border: "2px solid "+colors.borderBlue,
+      border: "2px solid "+colors.pink,
       background: 'rgba(47, 128, 237, 0.1)'
     },
     [theme.breakpoints.down('sm')]: {
       display: 'flex',
       position: 'absolute',
       top: '90px',
-      border: "1px solid "+colors.borderBlue,
+      border: "1px solid "+colors.pink,
       background: colors.white
     }
   },
@@ -168,11 +168,11 @@ class Header extends Component {
           <div className={ classes.icon }>
             <img
               alt=""
-              src={ require('../../assets/YFI-logo.png') }
+              src={ require('../../assets/Ruler-logo.png') }
               height={ '40px' }
               onClick={ () => { this.nav('') } }
             />
-            <Typography variant={ 'h3'} className={ classes.name } onClick={ () => { this.nav('') } }>Curve Swaps</Typography>
+            <Typography variant={ 'h3'} className={ classes.name } onClick={ () => { this.nav('') } }>Curve for Ruler</Typography>
           </div>
           <div className={ classes.links }>
             { this.renderLink('swap') }

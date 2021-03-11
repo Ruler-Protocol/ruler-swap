@@ -115,6 +115,7 @@ class App extends Component {
                   <Swap />
                 </Route>
               </Switch>
+              <Footer />
             </div>
           }
           <SnackbarController />

@@ -53,7 +53,7 @@ const styles = theme => ({
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
     margin: '40px 0px',
-    border: '1px solid '+colors.borderBlue,
+    border: '1px solid '+colors.pink,
     width: '500px',
     background: colors.white
   },
@@ -178,7 +178,7 @@ const styles = theme => ({
     height: '24px'
   },
   version1: {
-    border: '1px solid '+colors.borderBlue,
+    border: '1px solid '+colors.pink,
     padding: '6px',
     width: 'fit-content',
     borderRadius: '12px',
@@ -186,7 +186,7 @@ const styles = theme => ({
     fontSize: '12px'
   },
   version2: {
-    border: '1px solid '+colors.borderBlue,
+    border: '1px solid '+colors.pink,
     padding: '6px',
     width: 'fit-content',
     borderRadius: '12px',

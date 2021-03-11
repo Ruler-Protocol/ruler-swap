@@ -17,10 +17,29 @@ const WorkSans = {
 };
 
 export const colors = {
-  white: "#fff",
-  black: '#000',
-  darkBlue: "#2c3b57",
-  blue: "#2F80ED",
+	dark: "#2C313C",
+	midDark: "#4f4e4e",
+	lightDark: "#3C4655",
+	pink: "#C05D4F",
+	pink: "#E7C5C2",
+	darkPink: "#d4b6b4",
+	blue: "#a3c7d2",
+	light: "#EDE9E6",
+	disabled: "rgb(106 106 106 / 80%)",
+	lightGreen: "lightgreen",
+	white: "#ffffff",
+	white40: "#ffffff40",
+	white60: "#ffffff60",
+	white80: "#ffffff80",
+	whiteA1: "#ffffffa1",
+	secondaryGray: "#bfc2ce",
+	lightBlue: "lightblue",
+	darkLightBlue: "#7BA6B4",
+	darkLightBlue2: "rgb(133, 166, 180)",
+	black: "black",
+	yellow: "yellow",
+	gradient: "radial-gradient(174.47% 188.91% at 1.84% 0%, rgb(192, 93, 79) 0%, blue 100%), rgb(255, 255, 255)",
+	darkBrown: "rgb(92 92 92)",
   gray: "#e1e1e1",
   lightGray: "#737373",
   lightBlack: "#6a6a6a",
@@ -28,16 +47,11 @@ export const colors = {
   green: '#1abc9c',
   red: '#ed4337',
   orange: 'orange',
-  pink: '#DC6BE5',
   compoundGreen: '#00d395',
   tomato: '#e56b73',
   purple: '#935dff',
-
   text: "#212529",
-  lightBlue: "#2F80ED",
   topaz: "#0b8f92",
-  darkGray: "rgba(43,57,84,.5)",
-  borderBlue: 'rgba(25, 101, 233, 0.5)'
 };
 
 const breakpoints = createBreakpoints({
@@ -217,7 +231,7 @@ const iswapTheme =  {
     },
     MuiAccordion: {
       root: {
-        border: '1px solid '+colors.borderBlue,
+        border: '1px solid '+colors.pink,
         borderRadius: '50px',
         margin: '8px 0px',
         '&:before': { //underline color when textfield is inactive
@@ -279,7 +293,7 @@ const iswapTheme =  {
     },
     MuiToggleButtonGroup: {
       root: {
-        border: '1px solid '+colors.borderBlue,
+        border: '1px solid '+colors.pink,
         borderRadius: '50px',
       },
       groupedSizeSmall: {
