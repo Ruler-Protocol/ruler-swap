@@ -466,7 +466,6 @@ class Swap extends Component {
 
     const {
       loading,
-      pools,
       selectedPool
     } = this.state
 
@@ -616,11 +615,6 @@ class Swap extends Component {
     let val = []
     val[event.target.name] = event.target.value
     this.setState(val)
-
-    const { pools, pool, selectedPool } = this.state
-
-    const value = event.target.value
-
     const that = this
 
     window.setTimeout(() => {
@@ -646,8 +640,6 @@ class Swap extends Component {
     const {
       fromAsset,
       toAsset,
-      pool,
-      pools,
       selectedPool,
       fromAmount
     } = this.state
@@ -684,8 +676,6 @@ class Swap extends Component {
     const {
       fromAsset,
       toAsset,
-      pool,
-      pools,
       selectedPool,
       fromAmount
     } = this.state

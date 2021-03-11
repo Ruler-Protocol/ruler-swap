@@ -17,7 +17,6 @@ import { floatToFixed } from '../../utils/numbers'
 import {
   ERROR,
   CONFIGURE_RETURNED,
-  GET_BALANCES,
   BALANCES_RETURNED,
   DEPOSIT,
   DEPOSIT_RETURNED,
@@ -25,7 +24,6 @@ import {
   WITHDRAW_RETURNED,
   GET_DEPOSIT_AMOUNT,
   GET_DEPOSIT_AMOUNT_RETURNED,
-  GET_WITHDRAW_AMOUNT,
   GET_WITHDRAW_AMOUNT_RETURNED,
   SLIPPAGE_INFO_RETURNED,
 } from '../../constants'
@@ -399,8 +397,6 @@ class Liquidity extends Component {
 
     const {
       loading,
-      pools,
-      pool,
       poolAmount,
       poolAmountError,
       selectedPool
@@ -553,8 +549,6 @@ class Liquidity extends Component {
     const { classes } = this.props;
     const {
       loading,
-      pools,
-      pool,
       selectedPool
     } = this.state
 
@@ -586,17 +580,13 @@ class Liquidity extends Component {
   }
 
   renderDepositAmount = () => {
-    const {
-      classes
-    } = this.props
+    const { classes } = this.props
 
     const {
       depositAmount,
       slippagePcent,
       selectedPool
-    } = this.state
-    let amount = depositAmount;
-    if (!depositAmount) amount = 0.00
+    } = this.state;
     if (selectedPool && !selectedPool.isPoolSeeded) return null;
 
     return (
@@ -639,11 +629,7 @@ class Liquidity extends Component {
 
   renderWithdraw = () => {
     const { classes } = this.props;
-    const {
-      loading,
-      pools,
-      pool,
-    } = this.state
+    const { loading } = this.state;
 
     return (
       <React.Fragment>
@@ -667,15 +653,10 @@ class Liquidity extends Component {
   }
 
   renderAssetInput = (asset, DorW) => {
-    const {
-      classes
-    } = this.props
+    const { classes } = this.props;
+    const { loading } = this.state;
 
-    const {
-      loading,
-    } = this.state
-
-    let type = asset.symbol
+    let type = asset.symbol;
 
     const amount = this.state[type+"Amount"]
     const amountError = this.state[type+'AmountError']
@@ -767,42 +748,13 @@ class Liquidity extends Component {
   }
 
   toggleDeposit = () => {
-    if(this.state.loading) {
-      return
-    }
+    if(this.state.loading) return;
 
-    this.setState({ activeTab: 'deposit', poolAmount: '' })
+    this.setState({ activeTab: 'deposit', poolAmount: '' });
 
-    let {
-      pools,
-      pool,
-      selectedPool
-    } = this.state
+    let { selectedPool } = this.state;
 
-    if(!selectedPool) {
-      return false
-    }
-    if(selectedPool.version === 1) {
-      selectedPool = null
-
-      if(pools && pools.length > 0) {
-        const v2PoolsArr = pools.filter((pool) => {
-          return pool.version === 2
-        })
-        if(v2PoolsArr.length > 0) {
-          selectedPool = v2PoolsArr[0]
-        }
-      }
-
-      this.setState({
-        selectedPool: selectedPool,
-        pool: selectedPool ? selectedPool.id : ''
-      })
-
-      if(!selectedPool) {
-        return
-      }
-    }
+    if(!selectedPool) return false;
 
     const val = []
     val[selectedPool.assets[0].symbol+'Amount'] = floatToFixed(selectedPool.assets[0].balance, selectedPool.assets[0].decimals)
@@ -845,11 +797,7 @@ class Liquidity extends Component {
   }
 
   onDeposit = () => {
-    const {
-      pool,
-      pools,
-      selectedPool
-    } = this.state
+    const { selectedPool } = this.state;
 
     let error = false
 
@@ -868,17 +816,11 @@ class Liquidity extends Component {
   onWithdraw = () => {
     this.setState({ poolAmountError: false })
 
-
-    const {
-      poolAmount,
-      pool,
-      pools,
-      selectedPool
-    } = this.state
+    const { poolAmount, selectedPool } = this.state;
 
     if(!poolAmount || isNaN(poolAmount) || poolAmount <= 0 || poolAmount > selectedPool.balance) {
       this.setState({ poolAmountError: true })
-      return false
+      return false;
     }
 
     this.setState({ loading: true })

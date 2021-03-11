@@ -26,7 +26,6 @@ import {
   WITHDRAW,
   WITHDRAW_RETURNED,
   GET_WITHDRAW_AMOUNT,
-  GET_WITHDRAW_AMOUNT_RETURNED,
 
   SWAP,
   SWAP_RETURNED,
@@ -378,8 +377,6 @@ class Store {
         let liquidityAddress = ''
         let liquidityABI = ''
 
-        const basePools = store.getStore('basePools')
-
         if(assets[1].erc20address.toLowerCase() === '0x6B175474E89094C44Da98b954EedeAC495271d0F'.toLowerCase()) {
           liquidityAddress = config.usdDepositerAddress
           liquidityABI = config.usdDepositerABI
@@ -470,7 +467,7 @@ class Store {
       const tokenContract = new web3.eth.Contract(config.erc20ABI, pool.address)
       const totalSupply = await tokenContract.methods.totalSupply().call()
       console.log(totalSupply)
-      if(totalSupply == 0) {
+      if(totalSupply === 0) {
         receive = '0'
       } else {
         return callback(ex)
@@ -564,7 +561,6 @@ class Store {
   getSwapAmount = async (payload) => {
     try {
       const { pool, from, to, amount } = payload.content
-      const account = store.getStore('account')
       const web3 = await this._getWeb3Provider()
 
       let amountToSend = web3.utils.toWei(amount, "ether")

@@ -20,7 +20,6 @@ export const colors = {
 	dark: "#2C313C",
 	midDark: "#4f4e4e",
 	lightDark: "#3C4655",
-	pink: "#C05D4F",
 	pink: "#E7C5C2",
 	darkPink: "#d4b6b4",
 	blue: "#a3c7d2",

@@ -258,7 +258,6 @@ class AddPool extends Component {
   constructor(props) {
     super()
 
-    const account = store.getStore('account')
     const pools = store.getStore('pools')
     const basePools = store.getStore('basePools')
 
@@ -481,19 +480,8 @@ class AddPool extends Component {
   }
 
   renderAssetInfo = () => {
-    const { assetInfo, selectedBasePool, name, symbol, fee, a } = this.state
-    const { classes } = this.props
-
-    /*
-    <div className={ classes.assetField }>
-      <Typography variant='h3'>{ a }</Typography>
-      <Typography variant='h4' className={ classes.gray }>a</Typography>
-    </div>
-    <div className={ classes.assetField }>
-      <Typography variant='h3'>{ fee }%</Typography>
-      <Typography variant='h4' className={ classes.gray }>fee</Typography>
-    </div>
-    */
+    const { assetInfo, selectedBasePool, name, symbol } = this.state;
+    const { classes } = this.props;
 
     return (
       <div className={ classes.cont }>
