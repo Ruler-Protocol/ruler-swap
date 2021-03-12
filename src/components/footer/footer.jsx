@@ -1,6 +1,9 @@
 import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
 import { withStyles } from '@material-ui/core/styles';
+import { Typography } from '@material-ui/core';
+import DescriptionIcon from '@material-ui/icons/Description';
+import GitHubIcon from '@material-ui/icons/GitHub';
 
 import { colors } from '../../theme'
 
@@ -19,6 +22,17 @@ const styles = theme => ({
     [theme.breakpoints.down('xs')]: {
       justifyContent: 'flex-start',
     }
+  },
+  link: {
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    '&:hover': {
+      textDecoration: 'underline'
+    },
+  },
+  icon: {
+    marginRight: "6px"
   }
 });
 
@@ -35,7 +49,18 @@ class Footer extends Component {
     const { classes } = this.props;
     return (
       <div className={classes.footer}>
-        Credit to https://github.com/andrecronje/crv.finance
+        <div className={ classes.link } onClick={()=> window.open("https://app.rulerprotocol.com/", "_blank")}>
+          <img alt="" src={ require('../../assets/ruler-icon.png') } height='23px' className={ classes.icon } />
+          <Typography variant={ 'h4'} >Ruler App</Typography>
+        </div>
+        <div className={ classes.link } onClick={()=> window.open("https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry", "_blank")}>
+          <DescriptionIcon height='15px' className={ classes.icon } />
+          <Typography variant={ 'h4'} >Curve Metapool Docs</Typography>
+        </div>
+        <div className={ classes.link } onClick={()=> window.open("https://github.com/curvefi/crv.finance", "_blank")}>
+          <GitHubIcon height='15px' className={ classes.icon } />
+          <Typography variant={ 'h4'} >UI Credit</Typography>
+        </div>
       </div>
     )
   }
