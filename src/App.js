@@ -102,17 +102,13 @@ class App extends Component {
               <Header />
               <Disclaimer />
               <Switch>
-                <Route path='/liquidity'>
-                  <Liquidity />
+                <Route path='/liquidity' component={Liquidity}>
                 </Route>
-                <Route path="/swap">
-                  <Swap />
+                <Route path="/swap" component={Swap}>
                 </Route>
-                <Route path="/add">
-                  <AddPool />
+                <Route path="/add" component={AddPool}>
                 </Route>
-                <Route path="/">
-                  <Swap />
+                <Route path="/" component={Swap}>
                 </Route>
               </Switch>
               <Footer />
