@@ -239,7 +239,7 @@ class Swap extends Component {
 
     const account = store.getStore('account')
     const pools = store.getStore('pools')
-    const selectedPool = pools && pools.length > 0 ? pools[0] : null
+    const selectedPool = this.handleSelectedPool(pools);
 
     this.state = {
       pools: pools,
@@ -277,9 +277,36 @@ class Swap extends Component {
     emitter.removeListener(SWAP_RETURNED, this.swapReturned);
   };
 
+  // set the selected pool if there is a pool address in the URL
+  handleSelectedPool = (pools) => {
+
+    // get the path
+    const path = window.location.pathname;
+
+    // extract pool address
+    const preSelectedPool = path.substring(path.lastIndexOf("/") + 1);
+
+    let selectedPool = null;
+
+    // check address validity
+    if (pools && (/^0x[a-fA-F0-9]{40}$/).test(preSelectedPool))
+      // look for pool that matches address in url
+      for (const pool of pools) {
+        if(pool.address.toUpperCase() === preSelectedPool.toUpperCase())
+          selectedPool = pool;
+      }
+    
+    // autofill to first pool if there isn't a preselected one
+    if (selectedPool === null)
+      selectedPool = pools && pools.length > 0 ? pools[0] : null
+
+    return selectedPool;
+  }
+
   configureReturned = () => {
     const pools = store.getStore('pools')
-    const selectedPool = pools && pools.length > 0 ? pools[0] : null
+
+    const selectedPool = this.handleSelectedPool(pools);
 
     this.setState({
       account: store.getStore('account'),

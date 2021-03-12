@@ -211,22 +211,7 @@ class Liquidity extends Component {
     const account = store.getStore('account')
     const pools = store.getStore('pools')
 
-    const preSelectedPoolMatches = window.location.hash.match(/pool=([a-z0-9/-]+)/i);
-    const preSelectedPool = preSelectedPoolMatches === null ? null : preSelectedPoolMatches[1];
-
-    let selectedPool = null
-    if(pools && pools.length > 0) {
-      const v2PoolsArr = pools.filter((pool) => {
-        return pool.version === 2
-      })
-      if(v2PoolsArr.length > 0) {
-        selectedPool = (
-          !v2PoolsArr || v2PoolsArr.length === 0 ? null :
-          preSelectedPool !== null ? v2PoolsArr.find(({ id }) => id === preSelectedPool) :
-          v2PoolsArr[0]
-        );
-      }
-    }
+    const selectedPool = this.handleSelectedPool(pools);
 
     this.state = {
       account: account,
@@ -265,18 +250,36 @@ class Liquidity extends Component {
     emitter.removeListener(SLIPPAGE_INFO_RETURNED, this.slippageInfoReturned);
   };
 
+  // set the selected pool if there is a pool address in the URL
+  handleSelectedPool = (pools) => {
+
+    // get the path
+    const path = window.location.pathname;
+
+    // extract pool address
+    const preSelectedPool = path.substring(path.lastIndexOf("/") + 1);
+
+    let selectedPool = null;
+
+    // check address validity
+    if (pools && (/^0x[a-fA-F0-9]{40}$/).test(preSelectedPool))
+      // look for pool that matches address in url
+      for (const pool of pools) {
+        if(pool.address.toUpperCase() === preSelectedPool.toUpperCase())
+          selectedPool = pool;
+      }
+    
+    // autofill to first pool if there isn't a preselected one
+    if (selectedPool === null)
+      selectedPool = pools && pools.length > 0 ? pools[0] : null
+
+    return selectedPool;
+  }
+
   configureReturned = () => {
     const pools = store.getStore('pools')
 
-    let selectedPool = null
-    if(pools && pools.length > 0) {
-      const v2PoolsArr = pools.filter((pool) => {
-        return pool.version === 2
-      })
-      if(v2PoolsArr.length > 0) {
-        selectedPool = v2PoolsArr[0]
-      }
-    }
+    const selectedPool = this.handleSelectedPool(pools); 
 
     const newStateSlice = {
       account: store.getStore('account'),
