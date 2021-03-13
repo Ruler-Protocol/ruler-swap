@@ -285,6 +285,7 @@ class AddPool extends Component {
       loading: !(pools && pools.length > 0 && pools[0].assets.length > 0),
     }
   }
+  
   componentWillMount() {
     emitter.on(ERROR, this.errorReturned);
     emitter.on(CONFIGURE_RETURNED, this.configureReturned);
@@ -332,6 +333,7 @@ class AddPool extends Component {
 
   render() {
     const { classes } = this.props;
+    const isAuthorized = localStorage.getItem("password") === "RulerAdmin";
     const {
       loading,
       account,
@@ -342,32 +344,35 @@ class AddPool extends Component {
     }
 
     return (
-      <div className={ classes.root }>
-        <div className={ classes.inputContainer }>
-          <Typography variant='h2' align='center' className={ classes.poolInfoHeader }>Setup</Typography>
-          <Alert icon={false} className={classes.infoAlert}>
-            Note: The factory does not support tokens with transfer fees.<br /><a href="https://curve.readthedocs.io/factory-deployer.html#limitations" target="_blank" rel="noopener noreferrer">Read all expected behaviors and limitations</a>
-          </Alert>
-          { this.renderInput('name') }
-          { this.renderInput('symbol') }
-          { this.renderInput('a') }
-          { this.renderInput('fee') }
-          { this.renderAddressInput() }
-          { this.renderBasePoolSelect() }
-          { this.renderAssetInfo() }
-          <Button
-            className={ classes.actionButton }
-            variant="outlined"
-            color="primary"
-            disabled={ loading }
-            onClick={ this.onAddPool }
-            fullWidth
-            >
-            <Typography className={ classes.buttonText } variant={ 'h4'} color='secondary'>Create Pool</Typography>
-          </Button>
-        </div>
-        { loading && <Loader /> }
-      </div>
+      isAuthorized && 
+        (
+          <div className={ classes.root }>
+            <div className={ classes.inputContainer }>
+              <Typography variant='h2' align='center' className={ classes.poolInfoHeader }>Setup</Typography>
+              <Alert icon={false} className={classes.infoAlert}>
+                Note: The factory does not support tokens with transfer fees.<br /><a href="https://curve.readthedocs.io/factory-deployer.html#limitations" target="_blank" rel="noopener noreferrer">Read all expected behaviors and limitations</a>
+              </Alert>
+              { this.renderInput('name') }
+              { this.renderInput('symbol') }
+              { this.renderInput('a') }
+              { this.renderInput('fee') }
+              { this.renderAddressInput() }
+              { this.renderBasePoolSelect() }
+              { this.renderAssetInfo() }
+              <Button
+                className={ classes.actionButton }
+                variant="outlined"
+                color="primary"
+                disabled={ loading }
+                onClick={ this.onAddPool }
+                fullWidth
+                >
+                <Typography className={ classes.buttonText } variant={ 'h4'} color='secondary'>Create Pool</Typography>
+              </Button>
+            </div>
+            { loading && <Loader /> }
+          </div>
+        )
     )
   };
 
