@@ -321,8 +321,9 @@ class Store {
     try {
       const erc20Contract = new web3.eth.Contract(config.erc20ABI, pool.address)
 
-      const symbol = await erc20Contract.methods.symbol().call()
-      if (!symbol.includes('RC_') && !symbol.includes('RR_')) return callback(null);
+      const symbol = await erc20Contract.methods.symbol().call();
+      // only get RC_ & RR_ tokens, exclude RC_WBTC_25000_DAI_2021_3_31 (since it was for testing and only used for testing)
+      if ((!symbol.includes('RC_') && !symbol.includes('RR_')) || symbol === `RC_WBTC_25000_DAI_2021_3_31`) return callback(null);
       const decimals = parseInt(await erc20Contract.methods.decimals().call())
       const name = await erc20Contract.methods.name().call()
 
