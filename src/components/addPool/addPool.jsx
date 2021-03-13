@@ -195,7 +195,7 @@ const styles = theme => ({
     width: '100%',
     background: colors.gray,
     borderRadius: '10px',
-    padding: '24px'
+    padding: '24px',
   },
   assetInfo: {
     width: '100%',
@@ -217,7 +217,7 @@ const styles = theme => ({
   assetField: {
     display: 'flex',
     flexDirection: 'column',
-    paddingBottom: '12px'
+    paddingBottom: '12px',
   },
   assetFieldName: {
     display: 'flex',
@@ -233,6 +233,10 @@ const styles = theme => ({
     width: '100%'
   },
   another: {
+    '& div': {
+      margin: '0'
+    },
+    width: '60px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -346,6 +350,8 @@ class AddPool extends Component {
           </Alert>
           { this.renderInput('name') }
           { this.renderInput('symbol') }
+          { this.renderInput('a') }
+          { this.renderInput('fee') }
           { this.renderAddressInput() }
           { this.renderBasePoolSelect() }
           { this.renderAssetInfo() }
@@ -479,7 +485,7 @@ class AddPool extends Component {
   }
 
   renderAssetInfo = () => {
-    const { assetInfo, selectedBasePool, name, symbol } = this.state;
+    const { assetInfo, selectedBasePool, name, symbol, a, fee } = this.state;
     const { classes } = this.props;
 
     return (
@@ -493,6 +499,14 @@ class AddPool extends Component {
           <div className={ classes.assetField }>
             <Typography variant='h3'>{ symbol }</Typography>
             <Typography variant='h4' className={ classes.gray }>symbol</Typography>
+          </div>
+          <div className={ classes.assetField }>
+            <Typography variant='h3'>{ a }</Typography>
+            <Typography variant='h4' className={ classes.gray }>amplification coefficient</Typography>
+          </div>
+          <div className={ classes.assetField }>
+            <Typography variant='h3'>{ fee }</Typography>
+            <Typography variant='h4' className={ classes.gray }>trade fee</Typography>
           </div>
 
           <div className={ classes.sepperator }></div>
