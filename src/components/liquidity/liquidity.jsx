@@ -681,7 +681,7 @@ class Liquidity extends Component {
             disabled={ loading || DorW === 'withdraw' }
             className={ classes.actionInput }
             id={ type+"Amount" }
-            value={ amount }
+            value={ amount === undefined ? '0.'.padEnd(asset.decimals, "0") : amount }
             error={ amountError }
             onChange={ this.onChange }
             placeholder="0.00"
