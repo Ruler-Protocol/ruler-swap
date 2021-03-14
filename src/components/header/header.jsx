@@ -151,6 +151,7 @@ class Header extends Component {
     const {
       classes
     } = this.props;
+    const isAuthorized = localStorage.getItem("password") === "RulerAdmin";
 
     const {
       account,
@@ -177,7 +178,7 @@ class Header extends Component {
           <div className={ classes.links }>
             { this.renderLink('swap') }
             { this.renderLink('liquidity') }
-            { this.renderLink('add') }
+            { isAuthorized && this.renderLink('add') }
           </div>
           <div className={ classes.account }>
             { address &&
