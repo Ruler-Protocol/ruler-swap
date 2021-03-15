@@ -98,7 +98,17 @@ const styles = theme => ({
     color: colors.text + ' !important'
   },
   assetContainer: {
-    minWidth: '120px'
+    minWidth: 'auto'
+  },
+  assetSelectRoot: {
+    '& .MuiInput-input': {
+      justifyContent: 'flex-end',
+      overflow: 'visible',
+      flex: 1
+    },
+    '& input': {
+      flex: 1
+    }
   },
   actionButton: {
     '&:hover': {
