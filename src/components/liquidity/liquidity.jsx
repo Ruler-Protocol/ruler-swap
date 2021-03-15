@@ -222,6 +222,7 @@ class Liquidity extends Component {
       poolAmountError: '',
       loading: !(pools && pools.length > 0 && pools[0].assets.length > 0),
       activeTab: 'deposit',
+      ...this.getStateSliceUserBalancesForSelectedPool(selectedPool),
     }
 
     // if(account && account.address) {
@@ -681,7 +682,7 @@ class Liquidity extends Component {
             disabled={ loading || DorW === 'withdraw' }
             className={ classes.actionInput }
             id={ type+"Amount" }
-            value={ amount === undefined ? '0.'.padEnd(asset.decimals, "0") : amount }
+            value={ amount === undefined ? '0.'.padEnd(asset.decimals + 2, "0") : amount }
             error={ amountError }
             onChange={ this.onChange }
             placeholder="0.00"
