@@ -621,7 +621,7 @@ class Liquidity extends Component {
                   height="30px"
                 />
               </div>,
-              endAdornment: <Typography variant='h5' style={{ minWidth: '90px', textAlign: 'right' }}>{selectedPool ? selectedPool.symbol : ''}</Typography>
+              endAdornment: <Typography variant='h5' style={{ width: 'auto', textAlign: 'right', whiteSpace: 'nowrap' }}>{selectedPool ? selectedPool.symbol : ''}</Typography>
             }}
           />
         </div>
