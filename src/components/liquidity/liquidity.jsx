@@ -169,7 +169,15 @@ const styles = theme => ({
     flex: 1,
     paddingLeft: '12px'
   },
-  assetSelectRoot: {
+    assetSelectRoot: {
+    '& .MuiInput-input': {
+      justifyContent: 'flex-end',
+      overflow: 'visible',
+      flex: 1
+    },
+    '& input': {
+      flex: 1
+    }
   },
   space: {
     height: '24px'
