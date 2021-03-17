@@ -52,7 +52,7 @@ const styles = theme => ({
     justifyContent: 'flex-start',
     margin: '40px 0px',
     border: '1px solid '+colors.pink,
-    width: '500px',
+    minWidth: '600px',
     background: colors.white
   },
   inputCardHeading: {

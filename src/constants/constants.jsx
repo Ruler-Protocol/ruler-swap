@@ -3,6 +3,13 @@ import BigNumber from 'bignumber.js'
 
 export const ERROR = 'ERROR'
 
+// #Underlying Reserves Balance
+export const GET_UNDERLYING_BALANCES = 'GET_UNDERLYING_BALANCES'
+export const UNDERLYING_BALANCES_RETURNED = 'UNDERLYING_BALANCES_RETURNED'
+
+// #Preselected Pool
+export const GET_PRESELECTED_POOL = 'GET_PRESELECTED_POOL'
+export const PRESELECTED_POOL_RETURNED = 'PRESELECTED_POOL_RETURNED'
 
 // #SNACKBAR
 export const SNACKBAR_ERROR = 'SNACKBAR_ERROR'

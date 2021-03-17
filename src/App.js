@@ -17,6 +17,7 @@ import Account from './components/account';
 import Swap from './components/swap';
 import Liquidity from './components/liquidity';
 import AddPool from './components/addPool';
+import CurrencyReserves from './components/currencyReserves'
 
 import { injected } from "./stores/connectors";
 
@@ -24,6 +25,8 @@ import {
   CONNECTION_CONNECTED,
   CONNECTION_DISCONNECTED,
   CONFIGURE,
+  CONFIGURE_RETURNED,
+  GET_PRESELECTED_POOL
 } from './constants'
 
 import Store from "./stores";
@@ -39,6 +42,7 @@ class App extends Component {
   componentWillMount() {
     emitter.on(CONNECTION_CONNECTED, this.connectionConnected);
     emitter.on(CONNECTION_DISCONNECTED, this.connectionDisconnected);
+    emitter.on(CONFIGURE_RETURNED, this.configureReturned)
 
     injected.isAuthorized().then(isAuthorized => {
       if (isAuthorized) {
@@ -60,7 +64,13 @@ class App extends Component {
   componentWillUnmount() {
     emitter.removeListener(CONNECTION_CONNECTED, this.connectionConnected);
     emitter.removeListener(CONNECTION_DISCONNECTED, this.connectionDisconnected);
+    emitter.removeListener(CONFIGURE_RETURNED, this.configureReturned);
   };
+
+  configureReturned = () => {
+    const pools = store.getStore('pools')
+    dispatcher.dispatch({ type: GET_PRESELECTED_POOL, content: {pools} })
+  }
 
   connectionConnected = () => {
     this.setState({ account: store.getStore('account') })
@@ -111,6 +121,7 @@ class App extends Component {
                 <Route path="/" component={Swap}>
                 </Route>
               </Switch>
+              <CurrencyReserves/>
               <Footer />
             </div>
           }

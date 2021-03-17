@@ -35,7 +35,10 @@ import {
   GET_ASSET_INFO,
   GET_ASSET_INFO_RETURNED,
   ADD_POOL,
-  ADD_POOL_RETURNED
+  ADD_POOL_RETURNED, 
+
+  GET_PRESELECTED_POOL,
+  PRESELECTED_POOL_RETURNED
 } from '../constants'
 import Web3 from 'web3'
 
@@ -66,6 +69,8 @@ class Store {
 
     this.store = {
       pools: [],
+      selectedPool: null,
+      underlyingBalances: [],
       basePools: [
         {
           id: 'USD',
@@ -157,6 +162,9 @@ class Store {
             break;
           case GET_WITHDRAW_AMOUNT:
             this.getWithdrawAmount(payload)
+            break;
+          case GET_PRESELECTED_POOL:
+            this.getPreselectedPool(payload)
             break;
           default: {
           }
@@ -273,6 +281,68 @@ class Store {
           address: poolAddress
         }
       })
+    } catch (ex) {
+      emitter.emit(ERROR, ex)
+      emitter.emit(SNACKBAR_ERROR, ex)
+    }
+  }
+
+  _getUnderlyingBalances = async (pool) => {
+    try {
+
+      // get account and web3
+      const web3 = await this._getWeb3Provider()
+
+      // initialize curve factory contract
+      const curveFactoryContract = new web3.eth.Contract(config.curveFactoryV2ABI, config.curveFactoryV2Address)
+
+      // get the underlying balances of each asset in the pool
+      const balances = await curveFactoryContract.methods.get_underlying_balances(pool.address).call()
+
+      return balances;
+
+    } catch(ex) {
+      emitter.emit(ERROR, ex)
+      // emitter.emit(SNACKBAR_ERROR, ex)
+    }
+  }
+
+  getPreselectedPool = async (payload) => {
+    try {
+
+      const { pools } = payload.content
+
+      // get the path
+      const path = window.location.pathname;
+
+      // extract pool address
+      const preSelectedPool = path.substring(path.lastIndexOf("/") + 1);
+
+      let selectedPool = null;
+
+      // check address validity
+      if (pools && (/^0x[a-fA-F0-9]{40}$/).test(preSelectedPool))
+        // look for pool that matches address in url
+        for (const pool of pools) {
+          if(pool.address.toUpperCase() === preSelectedPool.toUpperCase())
+            selectedPool = pool;
+        }
+      
+      // autofill to first pool if there isn't a preselected one
+      if (selectedPool === null)
+        selectedPool = pools && pools.length > 0 ? pools[0] : null
+
+      // set store selected pool value
+      store.setStore({ selectedPool: selectedPool })
+
+      // get the underlying asset balances for the selected pool
+      const underlyingBalances = await this._getUnderlyingBalances(selectedPool);
+      console.log(underlyingBalances);
+
+      store.setStore({ underlyingBalances })
+
+      emitter.emit(PRESELECTED_POOL_RETURNED, selectedPool)
+
     } catch (ex) {
       emitter.emit(ERROR, ex)
       emitter.emit(SNACKBAR_ERROR, ex)
