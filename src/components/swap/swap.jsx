@@ -740,7 +740,7 @@ class Swap extends Component {
       return asset.symbol === toAsset
     })[0]
 
-    if(!fromAmount || isNaN(fromAmount) || fromAmount <= 0 || fromAmount > from.balance) {
+    if(!fromAmount || isNaN(fromAmount) || fromAmount <= 0 || parseFloat(fromAmount) > parseFloat(from.balance)) {
       this.setState({ fromAmountError: true })
       return false
     }
