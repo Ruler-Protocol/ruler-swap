@@ -547,11 +547,19 @@ class Liquidity extends Component {
       depositAmount
     } = this.state
 
+    let insufficientBalance = false;
+
+    // check if user has input more than their token balance
+    if (selectedPool)
+      for (const asset of selectedPool.assets)
+        if (this.state[asset.symbol + "AmountError"] === true) insufficientBalance = true
+
     // button disabled conditions
     const disabled = !depositAmount || 
                       depositAmount === '' || 
                       parseInt(depositAmount) === 0 ||
-                      loading;
+                      loading ||
+                      insufficientBalance 
 
     return (
       <React.Fragment>
@@ -666,7 +674,9 @@ class Liquidity extends Component {
     let type = asset.symbol;
 
     const amount = this.state[type+"Amount"]
-    const amountError = this.state[type+'AmountError']
+
+    // error input if user inputs more than their balance
+    const amountError = this.state[type+"AmountError"] 
 
     return (
       <div className={ classes.valContainer }>
@@ -683,7 +693,7 @@ class Liquidity extends Component {
         <div>
           <TextField
             fullWidth
-            disabled={ loading || DorW === 'withdraw' }
+            disabled={ (loading || DorW === 'withdraw') && !amountError }
             className={ classes.actionInput }
             id={ type+"Amount" }
             value={ amount }
@@ -739,10 +749,32 @@ class Liquidity extends Component {
     }
   }
 
+  // determine if user has sufficient balance 
+  determineSufficientBalance = (symbol, balance) => {
+
+    // get the corresponding asset input
+    const inputAsset = this.state.selectedPool.assets.filter((asset) => {
+      return asset.symbol === symbol 
+    })[0];
+
+    // update state
+    if (inputAsset)
+      this.setState({
+        [`${symbol}AmountError`]: parseFloat(inputAsset.balance) < parseFloat(balance)
+      });
+
+  }
+
   onChange = (event) => {
+
+    // update state with new value and error boolean
     const newStateSlice = {
-      [event.target.id]: event.target.value
+      [event.target.id]: event.target.value,
     }
+
+    // get the asset symbol
+    const symbol = event.target.id.substring(0,event.target.id.indexOf("Amount"))
+    this.determineSufficientBalance(symbol, event.target.value);
 
     this.setState(newStateSlice);
     this.getDepositAmount(newStateSlice);
@@ -752,6 +784,8 @@ class Liquidity extends Component {
     const newStateSlice = {
       [`${symbol}Amount`]: balance,
     };
+
+    this.determineSufficientBalance(symbol, balance);
 
     this.setState(newStateSlice);
     this.getDepositAmount(newStateSlice);
@@ -816,7 +850,10 @@ class Liquidity extends Component {
     let amounts = []
 
     for(let i = 0; i < selectedPool.assets.length; i++) {
-      amounts.push(this.state[selectedPool.assets[i].symbol+'Amount'])
+      if (this.state[selectedPool.assets[i].symbol+'Amount'] === '')
+        amounts.push('0')
+      else
+        amounts.push(this.state[selectedPool.assets[i].symbol+'Amount'])
     }
 
     if(!error) {

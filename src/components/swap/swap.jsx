@@ -308,13 +308,28 @@ class Swap extends Component {
     // dispatcher.dispatch({ type: GET_BALANCES, content: {} })
   };
 
+  // determine if user has sufficient balance 
+  determineSufficientBalance = (balance) => {
+
+    // get the corresponding asset input
+    const inputAsset = this.state.selectedPool.assets.filter((asset) => {
+      return asset.symbol === this.state.fromAsset
+    })[0]
+
+    // update state    
+    this.setState({
+      "fromAmountError": parseFloat(inputAsset.balance) < parseFloat(balance)
+    });
+
+  }
+
   connectionDisconnected = () => {
     this.setState({ account: store.getStore('account') })
   }
 
   balancesReturned = (balances) => {
     const pools = store.getStore('pools')
-    const selectedPool = pools && pools.length > 0 ? pools[0] : null
+    const selectedPool = store.getStore('selectedPool') 
 
     this.setState({
       pools: pools,
@@ -356,6 +371,9 @@ class Swap extends Component {
     val['toAsset'] = this.state.fromAsset
     this.setState(val)
 
+    // check balance on switch
+    this.determineSufficientBalance(this.state.toAmount)
+
     const that = this
 
     window.setTimeout(() => {
@@ -374,11 +392,17 @@ class Swap extends Component {
       receivePerSend,
       sendPerReceive,
       selectedPool,
+      fromAmountError
     } = this.state
 
     if(!account || !account.address) {
       return (<div></div>)
     }
+
+    const disabled =  loading || 
+                      fromAmount === '' || 
+                      parseInt(fromAmount) === 0 || 
+                      fromAmountError
 
     return (
       <div className={ classes.root }>
@@ -403,7 +427,7 @@ class Swap extends Component {
                 className={ classes.actionButton }
                 variant="outlined"
                 color="primary"
-                disabled={ loading || fromAmount === '' || parseInt(fromAmount) === 0 }
+                disabled={ disabled }
                 onClick={ this.onSwap }
                 fullWidth
                 >
@@ -590,6 +614,10 @@ class Swap extends Component {
   }
 
   onChange = (event) => {
+
+    // check for sufficient balance
+    this.determineSufficientBalance(event.target.value);
+
     let val = []
     val[event.target.id] = event.target.value
     this.setState(val)
@@ -645,10 +673,15 @@ class Swap extends Component {
     if(type === 'to') {
       return false
     }
+
+    // check for sufficient balance
+    this.determineSufficientBalance(balance)
+
     let val = []
     val[type+"Amount"] = balance
     this.setState(val)
     const that = this
+
 
     window.setTimeout(() => {
       that._getSwapAmount()
