@@ -407,7 +407,7 @@ class Swap extends Component {
                 onClick={ this.onSwap }
                 fullWidth
                 >
-                <Typography className={ classes.buttonText } variant={ 'h4'} color='secondary'>{ ( fromAmount === '') && 'enter from amount' }{ (fromAmount !== '') && 'swap' }</Typography>
+                <Typography className={ classes.buttonText } variant={ 'h4'} color='secondary'>{ ( fromAmount === '') && 'Enter Input Amount' }{ (fromAmount !== '') && 'Swap' }</Typography>
               </Button>
             </Fragment>
           )}
