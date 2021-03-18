@@ -96,11 +96,14 @@ const styles = theme => ({
   },
   actionButton: {
     '&:hover': {
-      backgroundColor: colors.pink,
+      backgroundColor: colors.green,
+    },
+    '&:disabled': {
+      backgroundColor: colors.disabled
     },
     marginTop: '24px',
     padding: '12px',
-    backgroundColor: colors.darkPink,
+    backgroundColor: colors.compoundGreen,
     borderRadius: '10px',
     fontWeight: 500,
     [theme.breakpoints.up('md')]: {

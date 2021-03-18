@@ -11,6 +11,7 @@ import SwapVertIcon from '@material-ui/icons/SwapVert';
 import { colors } from '../../theme'
 
 import Loader from '../loader'
+import CurrencyReserves from '../currencyReserves'
 import RateInfo from '../rateInfo'
 import UnderlyingAssetsInfo from './underlyingAssetsInfo'
 import PoolSeedingCTA from '../poolSeedingCTA'
@@ -25,6 +26,7 @@ import {
   SWAP_AMOUNT_RETURNED,
   SWAP,
   SWAP_RETURNED,
+  CHANGE_SELECTED_POOL
 } from '../../constants'
 
 import Store from "../../stores";
@@ -51,8 +53,24 @@ const styles = theme => ({
     justifyContent: 'flex-start',
     margin: '40px 0px',
     border: '1px solid '+colors.pink,
-    minWidth: '600px',
+    minWidth: '650px',
     background: colors.white
+  },
+  actionButton: {
+    '&:hover': {
+      backgroundColor: colors.green,
+    },
+    '&:disabled': {
+      backgroundColor: colors.disabled
+    },
+    marginTop: '24px',
+    padding: '12px',
+    backgroundColor: colors.compoundGreen,
+    borderRadius: '10px',
+    fontWeight: 500,
+    [theme.breakpoints.up('md')]: {
+      padding: '15px',
+    }
   },
   inputCardHeading: {
     width: '100%',
@@ -108,21 +126,6 @@ const styles = theme => ({
     },
     '& input': {
       flex: 1
-    }
-  },
-  actionButton: {
-    '&:hover': {
-      backgroundColor: colors.pink,
-      border: `1px solid ${colors.pink}`,
-    },
-    marginTop: '24px',
-    padding: '12px',
-    backgroundColor: colors.darkPink,
-    borderRadius: '10px',
-    border: `1px solid ${colors.darkPink}`,
-    fontWeight: 500,
-    [theme.breakpoints.up('md')]: {
-      padding: '15px',
     }
   },
   buttonText: {
@@ -249,7 +252,7 @@ class Swap extends Component {
 
     const account = store.getStore('account')
     const pools = store.getStore('pools')
-    const selectedPool = this.handleSelectedPool(pools);
+    const selectedPool = store.getStore('selectedPool')
 
     this.state = {
       pools: pools,
@@ -435,6 +438,7 @@ class Swap extends Component {
             </Fragment>
           )}
         </div>
+        <CurrencyReserves/>
         { loading && <Loader /> }
       </div>
     )
@@ -643,6 +647,9 @@ class Swap extends Component {
     })
 
     const that = this
+
+    // notify that pool has changed
+    dispatcher.dispatch({ type: CHANGE_SELECTED_POOL, content: { pool: selectedPool } })
 
     window.setTimeout(() => {
       that._getSwapAmount()

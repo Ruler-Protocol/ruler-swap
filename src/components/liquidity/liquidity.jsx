@@ -12,6 +12,7 @@ import { colors } from '../../theme'
 
 import Loader from '../loader'
 import SlippageInfo from '../slippageInfo'
+import CurrencyReserves from '../currencyReserves'
 import { floatToFixed } from '../../utils/numbers'
 
 import {
@@ -26,6 +27,7 @@ import {
   GET_DEPOSIT_AMOUNT_RETURNED,
   GET_WITHDRAW_AMOUNT_RETURNED,
   SLIPPAGE_INFO_RETURNED,
+  CHANGE_SELECTED_POOL,
 } from '../../constants'
 
 import Store from "../../stores";
@@ -52,7 +54,7 @@ const styles = theme => ({
     justifyContent: 'flex-start',
     margin: '40px 0px',
     border: '1px solid '+colors.pink,
-    minWidth: '600px',
+    minWidth: '650px',
     background: colors.white
   },
   inputCardHeading: {
@@ -104,11 +106,11 @@ const styles = theme => ({
   },
   actionButton: {
     '&:hover': {
-      backgroundColor: colors.pink,
+      backgroundColor: colors.green,
     },
     marginTop: '24px',
     padding: '12px',
-    backgroundColor: colors.darkPink,
+    backgroundColor: colors.compoundGreen,
     borderRadius: '10px',
     fontWeight: 500,
     [theme.breakpoints.up('md')]: {
@@ -159,6 +161,7 @@ const styles = theme => ({
     alignItems: 'center',
     justifyContent: 'center',
     paddingBottom: '24px',
+    textDecoration: 'underline',
     color: colors.text
   },
   flexy: {
@@ -219,7 +222,7 @@ class Liquidity extends Component {
     const account = store.getStore('account')
     const pools = store.getStore('pools')
 
-    const selectedPool = this.handleSelectedPool(pools);
+    const selectedPool = store.getStore('selectedPool'); 
 
     this.state = {
       account: account,
@@ -259,36 +262,11 @@ class Liquidity extends Component {
     emitter.removeListener(SLIPPAGE_INFO_RETURNED, this.slippageInfoReturned);
   };
 
-  // set the selected pool if there is a pool address in the URL
-  handleSelectedPool = (pools) => {
-
-    // get the path
-    const path = window.location.pathname;
-
-    // extract pool address
-    const preSelectedPool = path.substring(path.lastIndexOf("/") + 1);
-
-    let selectedPool = null;
-
-    // check address validity
-    if (pools && (/^0x[a-fA-F0-9]{40}$/).test(preSelectedPool))
-      // look for pool that matches address in url
-      for (const pool of pools) {
-        if(pool.address.toUpperCase() === preSelectedPool.toUpperCase())
-          selectedPool = pool;
-      }
-    
-    // autofill to first pool if there isn't a preselected one
-    if (selectedPool === null)
-      selectedPool = pools && pools.length > 0 ? pools[0] : null
-
-    return selectedPool;
-  }
 
   configureReturned = () => {
     const pools = store.getStore('pools')
 
-    const selectedPool = this.handleSelectedPool(pools); 
+    const selectedPool = store.getStore('selectedPool'); 
 
     const newStateSlice = {
       account: store.getStore('account'),
@@ -396,6 +374,7 @@ class Liquidity extends Component {
             activeTab === 'withdraw' && this.renderWithdraw()
           }
         </div>
+        <CurrencyReserves/>
         { loading && <Loader /> }
       </div>
     )
@@ -692,7 +671,7 @@ class Liquidity extends Component {
             id={ type+"Amount" }
             value={ amount === undefined ? '0.'.padEnd(asset.decimals + 2, "0") : amount }
             error={ amountError }
-            onChange={ this.onChange }
+            onChange={ (e) => {if (e.currentTarget.value.length > 0) this.onChange(e)} }
             placeholder="0.00"
             variant="outlined"
             type="number"
@@ -732,6 +711,9 @@ class Liquidity extends Component {
 
     this.setState(newStateSlice);
     this.getDepositAmount(newStateSlice);
+
+    // notify that pool has changed
+    dispatcher.dispatch({ type: CHANGE_SELECTED_POOL, content: { pool: selectedPool } })
 
     // If an url fragment was used to auto-select a pool, remove that
     // fragment when we change pool to revert to the naked /liquidity url.

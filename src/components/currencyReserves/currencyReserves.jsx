@@ -9,6 +9,7 @@ import {
 import {
   ERROR,
   PRESELECTED_POOL_RETURNED,
+  SELECTED_POOL_CHANGED,
 } from '../../constants'
 import { colors } from '../../theme'
 import Loader from '../loader'
@@ -27,7 +28,7 @@ const styles = theme => ({
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
     border: '1px solid '+colors.pink,
-    minWidth: '600px',
+    minWidth: '650px',
     background: colors.white
   },
   header: {
@@ -43,14 +44,18 @@ class CurrencyReserves extends Component {
   constructor(props) {
     super()
 
+    // get store values
     const basePools = store.getStore('basePools')
     const pools = store.getStore('pools')
     const selectedPool = store.getStore('selectedPool')  
+    const underlyingBalances = store.getStore('underlyingBalances')
+
 
     const selectedBasePool = basePools && basePools.length > 0 ? basePools[0] : null
 
     this.state = {
       account: store.getStore('account'),
+      underlyingBalances,
       pools,
       selectedPool,
       assetInfo: null,
@@ -64,12 +69,22 @@ class CurrencyReserves extends Component {
   componentWillMount() {
     emitter.on(ERROR, this.errorReturned);
     emitter.on(PRESELECTED_POOL_RETURNED, this.preselectedPoolReturned);
+    emitter.on(SELECTED_POOL_CHANGED, this.selectedPoolChanged);
   }
 
   componentWillUnmount() {
     emitter.removeListener(ERROR, this.errorReturned);
     emitter.removeListener(PRESELECTED_POOL_RETURNED, this.preselectedPoolReturned);
+    emitter.removeListener(SELECTED_POOL_CHANGED, this.selectedPoolChanged);
   };
+
+  selectedPoolChanged = () => {
+    // update reserves data for the current pool
+    this.setState({
+      underlyingBalances: store.getStore('underlyingBalances'),
+      selectedPool: store.getStore('selectedPool'),
+    });
+  }
 
   preselectedPoolReturned = (pool) => {
     // update pools and underlying balance
@@ -109,8 +124,8 @@ class CurrencyReserves extends Component {
           <div className={ classes.balances }>
             { selectedPool && selectedPool.assets ? selectedPool.assets.map((asset,i) => { return(
                 <div className={ classes.balance }>
-                    <Typography variant='h4'>{ asset.name }</Typography>
-                    ${ this.formatAssetBalance(underlyingBalances[i], asset.decimals) }
+                    <Typography variant='h4'>{ asset.name } ({ asset.symbol })</Typography> 
+                    { this.formatAssetBalance(underlyingBalances[i], asset.decimals) }
                 </div>
             )}) : <div>fetching liquidity</div>}
           </div>

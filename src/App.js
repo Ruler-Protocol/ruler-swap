@@ -17,7 +17,6 @@ import Account from './components/account';
 import Swap from './components/swap';
 import Liquidity from './components/liquidity';
 import AddPool from './components/addPool';
-import CurrencyReserves from './components/currencyReserves'
 
 import { injected } from "./stores/connectors";
 
@@ -121,7 +120,6 @@ class App extends Component {
                 <Route path="/" component={Swap}>
                 </Route>
               </Switch>
-              <CurrencyReserves/>
               <Footer />
             </div>
           }

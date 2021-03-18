@@ -38,7 +38,10 @@ import {
   ADD_POOL_RETURNED, 
 
   GET_PRESELECTED_POOL,
-  PRESELECTED_POOL_RETURNED
+  PRESELECTED_POOL_RETURNED,
+  CHANGE_SELECTED_POOL,
+  SELECTED_POOL_CHANGED
+  
 } from '../constants'
 import Web3 from 'web3'
 
@@ -166,6 +169,9 @@ class Store {
           case GET_PRESELECTED_POOL:
             this.getPreselectedPool(payload)
             break;
+          case CHANGE_SELECTED_POOL:
+            this.changeSelectedPool(payload)
+            break;
           default: {
           }
         }
@@ -265,6 +271,31 @@ class Store {
     })
   }
 
+  changeSelectedPool = async (payload) => {
+
+    try {
+
+      const { pool } = payload.content
+
+      // get the underlying asset balances for the selected pool
+      const underlyingBalances = await this._getUnderlyingBalances(pool);
+
+      // update store values
+      store.setStore({ selectedPool: pool})
+      store.setStore({ underlyingBalances })
+
+      // emit 
+      emitter.emit(SELECTED_POOL_CHANGED)
+
+    } catch (ex) {
+
+      emitter.emit(ERROR, ex)
+      emitter.emit(SNACKBAR_ERROR, ex)
+
+    }
+
+  }
+
   _getPoolsV2 = async (web3) => {
     try {
       const curveFactoryContract = new web3.eth.Contract(config.curveFactoryV2ABI, config.curveFactoryV2Address)
@@ -337,7 +368,6 @@ class Store {
 
       // get the underlying asset balances for the selected pool
       const underlyingBalances = await this._getUnderlyingBalances(selectedPool);
-      console.log(underlyingBalances);
 
       store.setStore({ underlyingBalances })
 
