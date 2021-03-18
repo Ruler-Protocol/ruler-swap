@@ -108,6 +108,9 @@ const styles = theme => ({
     '&:hover': {
       backgroundColor: colors.green,
     },
+    '&:disabled': {
+      backgroundColor: colors.disabled
+    },
     marginTop: '24px',
     padding: '12px',
     backgroundColor: colors.compoundGreen,
@@ -242,13 +245,13 @@ class Liquidity extends Component {
   }
   componentWillMount() {
     emitter.on(ERROR, this.errorReturned);
-    emitter.on(BALANCES_RETURNED, this.balancesReturned);
     emitter.on(CONFIGURE_RETURNED, this.configureReturned);
     emitter.on(DEPOSIT_RETURNED, this.depositReturned);
     emitter.on(WITHDRAW_RETURNED, this.withdrawReturned);
     emitter.on(GET_DEPOSIT_AMOUNT_RETURNED, this.getDepositAmountReturned);
     emitter.on(GET_WITHDRAW_AMOUNT_RETURNED, this.getWithdrawAmountReturned);
     emitter.on(SLIPPAGE_INFO_RETURNED, this.slippageInfoReturned);
+    emitter.on(BALANCES_RETURNED, this.balancesReturned);
   }
 
   componentWillUnmount() {
@@ -261,7 +264,6 @@ class Liquidity extends Component {
     emitter.removeListener(GET_WITHDRAW_AMOUNT_RETURNED, this.getWithdrawAmountReturned);
     emitter.removeListener(SLIPPAGE_INFO_RETURNED, this.slippageInfoReturned);
   };
-
 
   configureReturned = () => {
     const pools = store.getStore('pools')
@@ -289,7 +291,8 @@ class Liquidity extends Component {
     if (!selectedPool) return {}
 
     return Object.assign({}, ...selectedPool.assets.map(({ symbol, balance, decimals }) => ({
-      [`${symbol}Amount`]: floatToFixed(balance, decimals)
+      // [`${symbol}Amount`]: floatToFixed(balance, decimals)
+      [`${symbol}Amount`]: ''
     })))
   }
 
@@ -310,7 +313,7 @@ class Liquidity extends Component {
 
     const amounts = selectedPool.assets
       .map(({ symbol }) => futureState[`${symbol}Amount`]) // Gather balances for that pool from state
-      .map((amount) => (amount === '' || isNaN(amount)) ? 0 : amount) // Sanitize
+      .map((amount) => (amount === '' || isNaN(amount)) ? '0' : amount) // Sanitize
 
     dispatcher.dispatch({ type: GET_DEPOSIT_AMOUNT, content: { pool: selectedPool, amounts }})
   }
@@ -325,11 +328,12 @@ class Liquidity extends Component {
 
   balancesReturned = (balances) => {
     const pools = store.getStore('pools')
+    const pool = store.getStore('selectedPool')
 
     this.setState({
-      pools: pools,
-      pool: pools && pools.length > 0 ? pools[0].id : '',
-    })
+      pools,
+      pool
+    });
   };
 
   slippageInfoReturned = ({ slippagePcent }) => {
@@ -539,8 +543,15 @@ class Liquidity extends Component {
     const { classes } = this.props;
     const {
       loading,
-      selectedPool
+      selectedPool,
+      depositAmount
     } = this.state
+
+    // button disabled conditions
+    const disabled = !depositAmount || 
+                      depositAmount === '' || 
+                      parseInt(depositAmount) === 0 ||
+                      loading;
 
     return (
       <React.Fragment>
@@ -559,7 +570,7 @@ class Liquidity extends Component {
           className={ classes.actionButton }
           variant="outlined"
           color="primary"
-          disabled={ loading }
+          disabled={ disabled }
           onClick={ this.onDeposit }
           fullWidth
           >
@@ -619,7 +630,13 @@ class Liquidity extends Component {
 
   renderWithdraw = () => {
     const { classes } = this.props;
-    const { loading } = this.state;
+    const { loading, poolAmount } = this.state;
+
+    // button disabled conditions
+    const disabled = !poolAmount || 
+                      poolAmount === '' || 
+                      parseInt(poolAmount) === 0 ||
+                      loading;
 
     return (
       <React.Fragment>
@@ -628,7 +645,7 @@ class Liquidity extends Component {
           className={ classes.actionButton }
           variant="outlined"
           color="primary"
-          disabled={ loading }
+          disabled={ disabled }
           onClick={ this.onWithdraw }
           fullWidth
           >
@@ -669,16 +686,16 @@ class Liquidity extends Component {
             disabled={ loading || DorW === 'withdraw' }
             className={ classes.actionInput }
             id={ type+"Amount" }
-            value={ amount === undefined ? '0.'.padEnd(asset.decimals + 2, "0") : amount }
+            value={ amount }
             error={ amountError }
-            onChange={ (e) => {if (e.currentTarget.value.length > 0) this.onChange(e)} }
+            onChange={ this.onChange }
             placeholder="0.00"
             variant="outlined"
             type="number"
             InputProps={{
               startAdornment: <div className={ classes.assetSelectIcon }>
                 <img
-                  alt=""
+                  alt={type}
                   src={ this.getLogoForAsset(asset) }
                   height="30px"
                 />
@@ -743,15 +760,17 @@ class Liquidity extends Component {
   toggleDeposit = () => {
     if(this.state.loading) return;
 
-    this.setState({ activeTab: 'deposit', poolAmount: '' });
+    this.setState({ activeTab: 'deposit', poolAmount: '', depositAmount: ''});
 
     let { selectedPool } = this.state;
 
     if(!selectedPool) return false;
 
     const val = []
-    val[selectedPool.assets[0].symbol+'Amount'] = floatToFixed(selectedPool.assets[0].balance, selectedPool.assets[0].decimals)
-    val[selectedPool.assets[1].symbol+'Amount'] = floatToFixed(selectedPool.assets[1].balance, selectedPool.assets[1].decimals)
+    // val[selectedPool.assets[0].symbol+'Amount'] = floatToFixed(selectedPool.assets[0].balance, selectedPool.assets[0].decimals)
+    // val[selectedPool.assets[1].symbol+'Amount'] = floatToFixed(selectedPool.assets[1].balance, selectedPool.assets[1].decimals)
+    val[selectedPool.assets[0].symbol+'Amount'] = '0';
+    val[selectedPool.assets[1].symbol+'Amount'] = '0';
     this.setState(val)
   }
 
