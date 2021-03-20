@@ -437,6 +437,8 @@ class Store {
 
       const curveFactoryContract = new web3.eth.Contract(config.curveFactoryV2ABI, config.curveFactoryV2Address);
       const poolBalances = await curveFactoryContract.methods.get_balances(pool.address).call()
+      const fee = await curveFactoryContract.methods.get_fees(pool.address).call()
+      const a = await curveFactoryContract.methods.get_A(pool.address).call()
       const isPoolSeeded = sumArray(poolBalances) !== 0
 
       let coins = await curveFactoryContract.methods.get_underlying_coins(pool.address).call()
@@ -491,6 +493,8 @@ class Store {
           liquidityAddress: liquidityAddress,
           liquidityABI: liquidityABI,
           symbol: symbol,
+          a,
+          fee,
           decimals: decimals,
           name: name,
           balance: balance.toString(),

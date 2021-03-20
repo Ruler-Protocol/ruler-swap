@@ -35,7 +35,7 @@ const styles = theme => ({
       marginBottom: '20px'
   },
   balance: {
-      margin: '10px 0'
+      margin: '15px 0'
   }
 });
 
@@ -118,6 +118,8 @@ class CurrencyReserves extends Component {
     const { underlyingBalances, selectedPool } = this.state
     const { classes } = this.props;
 
+    if (!selectedPool) return(<div>Fetching Pool Data</div>)
+
     return(
       <div className={ classes.valContainer }>
         <div className={ classes.flexy }>
@@ -127,7 +129,15 @@ class CurrencyReserves extends Component {
                     <Typography variant='h4'>{ asset.name } ({ asset.symbol })</Typography> 
                     { this.formatAssetBalance(underlyingBalances[i], asset.decimals) }
                 </div>
-            )}) : <div>fetching liquidity</div>}
+            )}) : <div></div>}
+          </div>
+          <div className={ classes.balance }>
+            <Typography variant='h4'>Amplification Coefficient</Typography> 
+            {selectedPool.a}
+          </div>
+          <div className={ classes.balance }>
+            <Typography variant='h4'>Fee</Typography> 
+            {(selectedPool.fee[0] / 1e10) * 100}%
           </div>
         </div>
       </div>
