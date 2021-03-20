@@ -14,7 +14,7 @@ import { AuthereumConnector } from "@web3-react/authereum-connector";
 const POLLING_INTERVAL = 12000;
 const RPC_URLS = {
   1: "https://mainnet.infura.io/v3/0a0a7defb6a9484da19810319499ccd1",
-  4: "https://rinkeby.infura.io/v3/bd80ce1ca1f94da48e151bb6868bb150"
+  4: "https://rinkeby.infura.io/v3/0a0a7defb6a9484da19810319499ccd1"
 };
 
 export const injected = new InjectedConnector({
