@@ -506,7 +506,6 @@ class Liquidity extends Component {
             disabled={ loading }
             className={ classes.actionInput }
             placeholder={ 'Select' }
-            helperText={ 'Deposits are closed for V1 pools' }
           >
             { pools ? pools.filter((pool) => { return pool.version === 2; }).map((pool) => { return this.renderPoolOption(pool) }) : null }
           </TextField>
