@@ -13,7 +13,7 @@ import { colors } from '../../theme'
 import Loader from '../loader'
 import SlippageInfo from '../slippageInfo'
 import CurrencyReserves from '../currencyReserves'
-import { floatToFixed } from '../../utils/numbers'
+import { floatToFixed, sumArray } from '../../utils/numbers'
 
 import {
   ERROR,
@@ -25,9 +25,9 @@ import {
   WITHDRAW_RETURNED,
   GET_DEPOSIT_AMOUNT,
   GET_DEPOSIT_AMOUNT_RETURNED,
-  GET_WITHDRAW_AMOUNT_RETURNED,
   SLIPPAGE_INFO_RETURNED,
   CHANGE_SELECTED_POOL,
+  PRESELECTED_POOL_RETURNED
 } from '../../constants'
 
 import Store from "../../stores";
@@ -104,6 +104,9 @@ const styles = theme => ({
   assetContainer: {
     minWidth: '120px'
   },
+  assetLogo: {
+    marginRight: '8px'
+  },
   actionButton: {
     '&:hover': {
       backgroundColor: colors.green,
@@ -169,7 +172,8 @@ const styles = theme => ({
   },
   flexy: {
     width: '100%',
-    display: 'flex'
+    display: 'flex',
+    alignItems: 'center'
   },
   label: {
     flex: 1,
@@ -222,9 +226,9 @@ class Liquidity extends Component {
   constructor(props) {
     super()
 
-    const account = store.getStore('account')
-    const pools = store.getStore('pools')
-
+    const account = store.getStore('account');
+    const pools = store.getStore('pools');
+    const underlyingBalances = store.getStore('underlyingBalances');
     const selectedPool = store.getStore('selectedPool'); 
 
     this.state = {
@@ -232,8 +236,9 @@ class Liquidity extends Component {
       pools: pools,
       pool: selectedPool ? selectedPool.id : '',
       selectedPool: selectedPool,
+      underlyingBalances,
       poolAmount: '',
-      poolAmountError: '',
+      poolAmountError: false,
       loading: !(pools && pools.length > 0 && pools[0].assets.length > 0),
       activeTab: 'deposit',
       ...this.getStateSliceUserBalancesForSelectedPool(selectedPool),
@@ -249,9 +254,9 @@ class Liquidity extends Component {
     emitter.on(DEPOSIT_RETURNED, this.depositReturned);
     emitter.on(WITHDRAW_RETURNED, this.withdrawReturned);
     emitter.on(GET_DEPOSIT_AMOUNT_RETURNED, this.getDepositAmountReturned);
-    emitter.on(GET_WITHDRAW_AMOUNT_RETURNED, this.getWithdrawAmountReturned);
     emitter.on(SLIPPAGE_INFO_RETURNED, this.slippageInfoReturned);
     emitter.on(BALANCES_RETURNED, this.balancesReturned);
+    emitter.on(PRESELECTED_POOL_RETURNED, this.preselectedPoolReturned);
   }
 
   componentWillUnmount() {
@@ -261,12 +266,13 @@ class Liquidity extends Component {
     emitter.removeListener(DEPOSIT_RETURNED, this.depositReturned);
     emitter.removeListener(WITHDRAW_RETURNED, this.withdrawReturned);
     emitter.removeListener(GET_DEPOSIT_AMOUNT_RETURNED, this.getDepositAmountReturned);
-    emitter.removeListener(GET_WITHDRAW_AMOUNT_RETURNED, this.getWithdrawAmountReturned);
     emitter.removeListener(SLIPPAGE_INFO_RETURNED, this.slippageInfoReturned);
+    emitter.removeListener(PRESELECTED_POOL_RETURNED, this.preselectedPoolReturned);
   };
 
   configureReturned = () => {
     const pools = store.getStore('pools')
+    console.log(pools);
 
     const selectedPool = store.getStore('selectedPool'); 
 
@@ -286,14 +292,79 @@ class Liquidity extends Component {
     this.getDepositAmount(newStateSlice);
   };
 
+  formatAssetBalance = (balance, decimals) => {
+    // get index for decimal
+    const index = balance.length - decimals;
+
+    // add decimal
+    let formattedBalance = parseFloat(balance.substring(0, index) + '.' + balance.substring(index));
+
+    // truncate 
+    formattedBalance = floatToFixed(formattedBalance, decimals) 
+
+    // return with commas 
+    return(formattedBalance);
+  }
+
+  preselectedPoolReturned = (pool) => {
+    // update pools and underlying balance
+    this.setState({
+        selectedPool: pool,
+        underlyingBalances: store.getStore('underlyingBalances'),
+        loading: false
+    });
+
+  }
+
   // Returns hash map of user balances for selected pool, e.g. { BACAmount: '2.00', USDTAmount: '3.00', … }
   getStateSliceUserBalancesForSelectedPool = (selectedPool) => {
     if (!selectedPool) return {}
 
-    return Object.assign({}, ...selectedPool.assets.map(({ symbol, balance, decimals }) => ({
-      // [`${symbol}Amount`]: floatToFixed(balance, decimals)
+    const amounts = Object.assign({}, ...selectedPool.assets.map(({ symbol, balance, decimals }) => ({
       [`${symbol}Amount`]: ''
     })))
+
+    this.setState(amounts);
+
+  }
+
+  getWithdrawAmount = (newStateSlice = {}) => {
+
+    const { selectedPool, underlyingBalances } = this.state
+    const { poolAmount } = newStateSlice;
+
+    if (!poolAmount || parseFloat(poolAmount) === 0) return;
+
+    const futureState = {
+      ...this.state,
+      ...newStateSlice
+    }
+
+    const that = this;
+
+    // get the list of balances
+    const formattedArray = selectedPool.assets.map(function(asset, i) {
+      return parseFloat(that.formatAssetBalance(underlyingBalances[i], asset.decimals))
+    })
+
+    // get the sum
+    const total = parseFloat(sumArray(formattedArray));
+
+    formattedArray.forEach(function(num, i){
+
+      // percent of the pool the asset has 
+      const percent = num / total;
+
+      // how much of token i is to be received
+      const receive = parseFloat(poolAmount) * percent;
+      
+      // update state value
+      futureState[`${selectedPool.assets[i].symbol}Amount`] = receive.toFixed(selectedPool.assets[i].decimals)
+
+    });
+
+    this.setState(futureState);
+
   }
 
   getDepositAmount = (newStateSlice = {}) => {
@@ -328,11 +399,11 @@ class Liquidity extends Component {
 
   balancesReturned = (balances) => {
     const pools = store.getStore('pools')
-    const pool = store.getStore('selectedPool')
+    const selectedPool = store.getStore('selectedPool')
 
     this.setState({
       pools,
-      pool
+      selectedPool 
     });
   };
 
@@ -417,12 +488,68 @@ class Liquidity extends Component {
             onChange={ this.onChange }
             placeholder="0.00"
             variant="outlined"
+            type="number"
             InputProps={{
               endAdornment: <div className={ classes.assetContainer }>{ this.renderPoolSelectAsset("pool") }</div>,
             }}
           />
         </div>
       </div>
+    )
+  }
+
+  renderAssetOption = (option) => {
+    const { classes } = this.props
+
+    return (
+      <MenuItem key={option.symbol} value={option.symbol} className={ classes.assetSelectMenu }>
+        <React.Fragment>
+          <div className={ classes.assetSelectIcon }>
+            <img
+              alt=""
+              src={ this.getLogoForAsset(option) }
+              height="30px"
+            />
+          </div>
+          <div className={ classes.assetSelectIconName }>
+            <Typography variant='h4'>{ option.symbol }</Typography>
+          </div>
+        </React.Fragment>
+      </MenuItem>
+    )
+  }
+
+  renderAssetSelect = (id) => {
+    const { loading, selectedPool } = this.state
+    const { classes } = this.props
+
+    return (
+      <React.Fragment>
+        <div className={ classes.label }>
+          <Typography variant='h4' >
+            { id }
+          </Typography>
+        </div>
+        <div className={ classes.flexy }>
+          <TextField
+            id={ id }
+            name={ id }
+            select
+            value={ this.state[id] }
+            onChange={ this.onAssetSelectChange }
+            SelectProps={{
+              native: false,
+            }}
+            fullWidth
+            disabled={ loading }
+            variant="outlined"
+            placeholder={ 'Select' }
+            className={ classes.assetSelectRoot }
+          >
+            { selectedPool && selectedPool.assets ? selectedPool.assets.map(this.renderAssetOption) : null }
+          </TextField>
+        </div>
+      </React.Fragment>
     )
   }
 
@@ -557,7 +684,7 @@ class Liquidity extends Component {
     // button disabled conditions
     const disabled = !depositAmount || 
                       depositAmount === '' || 
-                      parseInt(depositAmount) === 0 ||
+                      parseFloat(depositAmount) === 0 ||
                       loading ||
                       insufficientBalance 
 
@@ -636,19 +763,63 @@ class Liquidity extends Component {
     )
   }
 
+  renderWithdrawAmount = () => {
+    const { classes } = this.props
+
+    const {
+      depositAmount,
+      selectedPool,
+    } = this.state;
+    if (selectedPool && !selectedPool.isPoolSeeded) return null;
+
+    return(
+      <div className={classes.valContainer}>
+        <div className={ classes.flexy }>
+          <div className={ classes.label }>
+            <Typography variant='h4'>
+              Receive
+            </Typography>
+          </div>
+          <div className={ classes.balances }>
+          </div>
+        </div>
+        <div>
+          <TextField
+            fullWidth
+            disabled={ true }
+            className={ classes.actionInput }
+            id={ "depositAmount" }
+            value={ depositAmount }
+            placeholder="0.00"
+            variant="outlined"
+            type="number"
+          />
+        </div>
+      </div>
+    );
+  }
+
   renderWithdraw = () => {
     const { classes } = this.props;
-    const { loading, poolAmount } = this.state;
+    const { loading, poolAmount, selectedPool, poolAmountError } = this.state;
+    const isAuthorized = localStorage.getItem("password") === "RulerAdmin";
 
     // button disabled conditions
     const disabled = !poolAmount || 
                       poolAmount === '' || 
-                      parseInt(poolAmount) === 0 ||
+                      parseFloat(poolAmount) === 0 ||
+                      poolAmountError || 
                       loading;
 
     return (
       <React.Fragment>
         { this.renderPoolSelectInput() }
+        {
+          isAuthorized && selectedPool && selectedPool.assets && selectedPool.assets.length > 0 && selectedPool.assets.map((asset) => {
+            return this.renderAssetInput(asset, 'withdraw')
+          })
+        }
+        { isAuthorized && this.renderAssetSelect("Withdraw In") }
         <Button
           className={ classes.actionButton }
           variant="outlined"
@@ -687,13 +858,13 @@ class Liquidity extends Component {
             </Typography>
           </div>
           <div className={ classes.balances }>
-            { (asset ? (<Typography variant='h4' onClick={ () => { if(DorW === 'withdraw') { return false; } this.setAmount(type, (asset ? floatToFixed(asset.balance, asset.decimals) : '0')) } } className={ classes.value } noWrap>{ ''+ ( asset && asset.balance ? floatToFixed(asset.balance, 4) : '0.0000') } { asset ? asset.symbol : '' }</Typography>) : <Typography variant='h4' className={ classes.value } noWrap>Balance: -</Typography>) }
+            { (asset && DorW === 'deposit' ? (<Typography variant='h4' onClick={ () => { if(DorW === 'withdraw') { return false; } this.setAmount(type, (asset ? floatToFixed(asset.balance, asset.decimals) : '0')) } } className={ classes.value } noWrap>{ ''+ ( asset && asset.balance ? floatToFixed(asset.balance, 4) : '0.0000') } { asset ? asset.symbol : '' }</Typography>) : <div></div>) }
           </div>
         </div>
         <div>
           <TextField
             fullWidth
-            disabled={ (loading || DorW === 'withdraw') && !amountError }
+            disabled={ loading && !amountError }
             className={ classes.actionInput }
             id={ type+"Amount" }
             value={ amount }
@@ -738,6 +909,7 @@ class Liquidity extends Component {
 
     this.setState(newStateSlice);
     this.getDepositAmount(newStateSlice);
+    this.getWithdrawAmount(newStateSlice);
 
     // notify that pool has changed
     dispatcher.dispatch({ type: CHANGE_SELECTED_POOL, content: { pool: selectedPool } })
@@ -749,8 +921,42 @@ class Liquidity extends Component {
     }
   }
 
-  // determine if user has sufficient balance 
-  determineSufficientBalance = (symbol, balance) => {
+  // determine if user has sufficient balance for withdrawals
+  determineSufficientWithdrawBalance = (symbol, balance) => {
+
+    const { selectedPool } = this.state;
+
+    let futureState = {
+      ...this.state,
+      [`${symbol}Amount`]: balance,
+    }
+
+    let total = 0;
+
+    // get sum of input amounts
+    selectedPool.assets.forEach((asset) => {
+      if (futureState[`${asset.symbol}Amount`])
+        total += parseFloat(futureState[`${asset.symbol}Amount`])
+    });
+
+    // set errors if the sum is larger than the amount of LP tokens
+    if (parseFloat(total) > parseFloat(selectedPool.balance)) 
+      selectedPool.assets.forEach((asset) => {
+        futureState[`${asset.symbol}AmountError`] = true
+      });
+    else 
+      selectedPool.assets.forEach((asset) => {
+        futureState[`${asset.symbol}AmountError`] = false 
+      });
+
+
+    // update state
+    this.setState(futureState);
+
+  }
+
+  // determine if user has sufficient balance for deposits
+  determineSufficientDepositBalance = (symbol, balance) => {
 
     // get the corresponding asset input
     const inputAsset = this.state.selectedPool.assets.filter((asset) => {
@@ -767,28 +973,72 @@ class Liquidity extends Component {
 
   onChange = (event) => {
 
-    // update state with new value and error boolean
-    const newStateSlice = {
-      [event.target.id]: event.target.value,
-    }
+    const { selectedPool, activeTab } = this.state;
+
+    let newStateSlice = {}
+
+    newStateSlice[event.target.id] = event.target.value;
 
     // get the asset symbol
     const symbol = event.target.id.substring(0,event.target.id.indexOf("Amount"))
-    this.determineSufficientBalance(symbol, event.target.value);
+
+    if (activeTab === 'deposit') {
+      this.determineSufficientDepositBalance(symbol, event.target.value);
+      this.getDepositAmount(newStateSlice);
+    } else {
+      this.determineSufficientWithdrawBalance(symbol, event.target.value);
+      this.getWithdrawAmount(newStateSlice);
+      // check if pool select input is valid 
+      // this should be in determineSufficientWithdrawBalance() but for some reason
+      // it won't work in there
+      if (symbol === "pool")
+        newStateSlice['poolAmountError'] = parseFloat(event.target.value) > parseFloat(selectedPool.balance)
+    }
 
     this.setState(newStateSlice);
-    this.getDepositAmount(newStateSlice);
+  }
+
+  onAssetSelectChange = (event) => {
+
+    const { selectedPool } = this.state;
+
+    if (!selectedPool) return;
+
+    let newStateSlice = {}
+
+    // update asset input amounts 
+    selectedPool.assets.forEach((asset, i) => {
+
+      if (event.target.value !== asset.symbol)
+        newStateSlice[`${asset.symbol}Amount`] = '0';
+      else 
+        newStateSlice[`${asset.symbol}Amount`] = selectedPool.balance;
+
+      // remove errors
+      newStateSlice[`${asset.symbol}AmountError`] = false
+
+    });
+
+    // set the LP token input value
+    newStateSlice[`poolAmount`] = selectedPool.balance;
+
+    this.setState(newStateSlice);
+
   }
 
   setAmount = (symbol, balance) => {
-    const newStateSlice = {
+    let newStateSlice = {
       [`${symbol}Amount`]: balance,
     };
 
-    this.determineSufficientBalance(symbol, balance);
+    if (this.state.activeTab === 'deposit'){ 
+      this.determineSufficientDepositBalance(symbol, balance);
+      this.getDepositAmount(newStateSlice);
+    } else {
+      this.getWithdrawAmount(newStateSlice);
+    }
 
     this.setState(newStateSlice);
-    this.getDepositAmount(newStateSlice);
   }
 
   toggleDeposit = () => {
@@ -872,8 +1122,19 @@ class Liquidity extends Component {
       return false;
     }
 
+    // amount of each asset to withdraw
+    let amounts = []
+
+    // populate amounts array
+    for(let i = 0; i < selectedPool.assets.length; i++) {
+      if (this.state[selectedPool.assets[i].symbol+'Amount'] === '')
+        amounts.push('0')
+      else
+        amounts.push(this.state[selectedPool.assets[i].symbol+'Amount'])
+    }
+
     this.setState({ loading: true })
-    dispatcher.dispatch({ type: WITHDRAW, content: { amount: poolAmount, pool: selectedPool } })
+    dispatcher.dispatch({ type: WITHDRAW, content: { amount: poolAmount, pool: selectedPool, amounts} })
   }
 }
 

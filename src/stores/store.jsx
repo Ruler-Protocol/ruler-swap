@@ -25,7 +25,6 @@ import {
 
   WITHDRAW,
   WITHDRAW_RETURNED,
-  GET_WITHDRAW_AMOUNT,
 
   SWAP,
   SWAP_RETURNED,
@@ -163,9 +162,6 @@ class Store {
           case GET_DEPOSIT_AMOUNT:
             this.getDepositAmount(payload)
             break;
-          case GET_WITHDRAW_AMOUNT:
-            this.getWithdrawAmount(payload)
-            break;
           case GET_PRESELECTED_POOL:
             this.getPreselectedPool(payload)
             break;
@@ -190,7 +186,6 @@ class Store {
 
   _checkApproval2 = async (asset, account, amount, contract) => {
     try {
-      console.log(asset)
       const web3 = await this._getWeb3Provider()
       const erc20Contract = new web3.eth.Contract(config.erc20ABI, asset.erc20address)
       const allowance = await erc20Contract.methods.allowance(account.address, contract).call({ from: account.address })
@@ -579,9 +574,9 @@ class Store {
       }
     }
 
-    console.log(pool.address, amounts, receive)
+    console.log(receive);
 
-    metapoolContract.methods.add_liquidity(pool.address, amounts, receive).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+    metapoolContract.methods.add_liquidity(pool.address, amounts, 0, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
     .on('transactionHash', function(hash){
       emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
       callback(null, hash)
@@ -592,6 +587,7 @@ class Store {
       }
     })
     .on('receipt', function(receipt){
+      dispatcher.dispatch({ type: CONFIGURE, content: {} })
     })
     .on('error', function(error) {
       if(error.message) {
@@ -603,7 +599,7 @@ class Store {
 
   withdraw = async (payload) => {
     try {
-      const { pool, amount } = payload.content
+      const { pool, amount, amounts } = payload.content
       const account = store.getStore('account')
       const web3 = await this._getWeb3Provider()
 
@@ -617,12 +613,11 @@ class Store {
           .toFixed(0)
       }
 
-      console.log(pool);
 
       await this._checkApproval2({erc20address:pool.address, decimals:18}, account, amountToSend, pool.liquidityAddress)
 
 
-      this._callRemoveLiquidity(web3, account, pool, amountToSend, (err, a) => {
+      this._callRemoveLiquidity(web3, account, pool, amountToSend, amounts, (err, a) => {
         if(err) {
           emitter.emit(ERROR, err)
           return emitter.emit(SNACKBAR_ERROR, err)
@@ -638,29 +633,107 @@ class Store {
     }
   }
 
-  _callRemoveLiquidity = async (web3, account, pool, amountToSend, callback) => {
+  _callRemoveLiquidity = async (web3, account, pool, amountToSend, amounts, callback) => {
     const metapoolContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress)
 
     //calcualte minimum amounts ?
 
-    metapoolContract.methods.remove_liquidity(pool.address, amountToSend, [0, 0, 0, 0]).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
-    .on('transactionHash', function(hash){
-      emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
-      callback(null, hash)
-    })
-    .on('confirmation', function(confirmationNumber, receipt){
-      if(confirmationNumber === 1) {
-        dispatcher.dispatch({ type: CONFIGURE, content: {} })
+    let assets = 0;
+
+    // determine if single sided removal or not
+    for (const amount of amounts) {
+      if (parseFloat(amount) !== 0)
+        assets++;
+    }
+
+    // convert amounts array to BN array
+    const amountsBN = amounts.map((amount, index) => {
+      let amountToSend = web3.utils.toWei(amount, "ether")
+      if (pool.assets[index].decimals !== 18) {
+        const decimals = new BigNumber(10)
+          .pow(pool.assets[index].decimals)
+
+        amountToSend = new BigNumber(amount)
+          .times(decimals)
+          .toFixed(0)
       }
+
+      return amountToSend
     })
-    .on('receipt', function(receipt){
-    })
-    .on('error', function(error) {
-      if(error.message) {
-        return callback(error.message)
-      }
-      callback(error)
-    })
+
+    if (assets === 1) {
+
+      // get the index of the asset being removed
+      const index = amountsBN.findIndex(asset => parseInt(asset) !== 0);
+
+      // single sided removal      
+      metapoolContract.methods.remove_liquidity_one_coin(pool.address, amountToSend, index, 0, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+      .on('transactionHash', function(hash){
+        emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
+        callback(null, hash)
+      })
+      .on('confirmation', function(confirmationNumber, receipt){
+        if(confirmationNumber === 1) {
+          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+        }
+      })
+      .on('receipt', function(receipt){
+          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+      })
+      .on('error', function(error) {
+        if(error.message) {
+          return callback(error.message)
+        }
+        callback(error)
+      })
+
+    } else if (assets > 1 && assets < amountsBN.length) {
+
+      // imbalanced removal
+      metapoolContract.methods.remove_liquidity_imbalance(pool.address, amountsBN, amountToSend, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+      .on('transactionHash', function(hash){
+        emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
+        callback(null, hash)
+      })
+      .on('confirmation', function(confirmationNumber, receipt){
+        if(confirmationNumber === 1) {
+          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+        }
+      })
+      .on('receipt', function(receipt){
+          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+      })
+      .on('error', function(error) {
+        if(error.message) {
+          return callback(error.message)
+        }
+        callback(error)
+      })
+
+    } else {
+
+      // remove all
+      metapoolContract.methods.remove_liquidity(pool.address, amountToSend, [0, 0, 0, 0]).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+      .on('transactionHash', function(hash){
+        emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
+        callback(null, hash)
+      })
+      .on('confirmation', function(confirmationNumber, receipt){
+        if(confirmationNumber === 1) {
+          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+        }
+      })
+      .on('receipt', function(receipt){
+          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+      })
+      .on('error', function(error) {
+        if(error.message) {
+          return callback(error.message)
+        }
+        callback(error)
+      })
+    }
+
   }
 
   getSwapAmount = async (payload) => {

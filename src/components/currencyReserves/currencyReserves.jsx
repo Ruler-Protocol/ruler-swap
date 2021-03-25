@@ -118,7 +118,7 @@ class CurrencyReserves extends Component {
     const { underlyingBalances, selectedPool } = this.state
     const { classes } = this.props;
 
-    if (!selectedPool) return(<div>Fetching Pool Data</div>)
+    if (!selectedPool || !underlyingBalances) return(<div>Fetching Pool Data</div>)
 
     return(
       <div className={ classes.valContainer }>
