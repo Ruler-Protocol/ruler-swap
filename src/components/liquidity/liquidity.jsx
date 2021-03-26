@@ -1068,7 +1068,8 @@ class Liquidity extends Component {
       newStateSlice['poolAmount'] = selectedPool.balance;
 
       // get slippage info
-      dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts, burn: selectedPool.balance}})
+      if (parseFloat(selectedPool.balance) > 0)
+        dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts, burn: selectedPool.balance}})
     }
 
     // update dropdown state
