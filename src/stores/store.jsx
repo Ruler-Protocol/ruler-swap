@@ -25,6 +25,7 @@ import {
 
   WITHDRAW,
   WITHDRAW_RETURNED,
+  GET_WITHDRAW_AMOUNT,
 
   SWAP,
   SWAP_RETURNED,
@@ -161,6 +162,9 @@ class Store {
             break
           case GET_DEPOSIT_AMOUNT:
             this.getDepositAmount(payload)
+            break;
+          case GET_WITHDRAW_AMOUNT: 
+            this.getWithdrawAmount(payload)
             break;
           case GET_PRESELECTED_POOL:
             this.getPreselectedPool(payload)
@@ -918,6 +922,59 @@ class Store {
       }
       callback(error)
     })
+  }
+
+  getWithdrawAmount = async (payload) => {
+    try {
+      const { pool, amounts } = payload.content
+      const web3 = await this._getWeb3Provider()
+
+      const amountsBN = amounts.map((amount, index) => {
+        let amountToSend = web3.utils.toWei(amount, "ether")
+        if (pool.assets[index].decimals !== 18) {
+          const decimals = new BigNumber(10)
+            .pow(pool.assets[index].decimals)
+
+          amountToSend = new BigNumber(amount)
+            .times(decimals)
+            .toFixed(0)
+        }
+
+        return amountToSend
+      })
+
+      // get the index of the asset being removed
+      const index = amountsBN.findIndex(asset => parseInt(asset) !== 0);
+      const zapContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress)
+      const poolContract = new web3.eth.Contract(config.metapoolABI, pool.address)
+
+
+      const [receiveAmountBn, virtPriceBn] = await Promise.all([
+        zapContract.methods.calc_withdraw_one_coin(pool.address, amountsBN[index], index).call(),
+        poolContract.methods.get_virtual_price().call(),
+      ])
+
+      const receiveAmount = bnToFixed(receiveAmountBn, 18)
+      let slippage;
+
+
+      if (Number(receiveAmount)) {
+        const virtualValue = multiplyBnToFixed(virtPriceBn, receiveAmountBn, 18)
+        const realValue = sumArray(amounts) // Assuming each component is at peg
+
+        slippage = (virtualValue / realValue) - 1;
+      }
+
+
+      // emitter.emit(GET_DEPOSIT_AMOUNT_RETURNED, parseFloat(receiveAmount))
+      emitter.emit(SLIPPAGE_INFO_RETURNED, {
+        slippagePcent: typeof slippage !== 'undefined' ? slippage * 100 : slippage,
+      })
+    } catch(ex) {
+      console.log(ex)
+      emitter.emit(ERROR, ex)
+      emitter.emit(SNACKBAR_ERROR, ex)
+    }
   }
 
   getDepositAmount = async (payload) => {
