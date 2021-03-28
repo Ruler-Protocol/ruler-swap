@@ -815,7 +815,7 @@ class Liquidity extends Component {
       selectedPool, 
       poolAmountError,
       slippagePcent } = this.state;
-    const isAuthorized = localStorage.getItem("password") === "RulerAdmin";
+    // const isAuthorized = localStorage.getItem("password") === "RulerAdmin";
 
     // button disabled conditions
     const disabled = !poolAmount || 
