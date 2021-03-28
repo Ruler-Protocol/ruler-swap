@@ -828,11 +828,11 @@ class Liquidity extends Component {
       <React.Fragment>
         { this.renderPoolSelectInput() }
         {
-          isAuthorized && selectedPool && selectedPool.assets && selectedPool.assets.length > 0 && selectedPool.assets.map((asset) => {
+          selectedPool && selectedPool.assets && selectedPool.assets.length > 0 && selectedPool.assets.map((asset) => {
             return this.renderAssetInput(asset, 'withdraw')
           })
         }
-        { isAuthorized && this.renderAssetSelect("Withdraw In") }
+        { this.renderAssetSelect("Withdraw In") }
         <SlippageInfo slippagePcent={slippagePcent} />
         <Button
           className={ classes.actionButton }
