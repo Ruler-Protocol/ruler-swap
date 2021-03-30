@@ -517,9 +517,9 @@ class Swap extends Component {
         <div className={ classes.poolSelectOption }>
           <div>
             <Typography variant='h4'>{ name }</Typography>
-            { option.balance < 0 ? <Typography variant='subtitle2' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
+            { option.balance > 0 ? <Typography variant='subtitle2' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
           </div>
-          {expiryDate <  now ? <Typography variant='h5' className={classes.expired}>expired</Typography> : <div></div>}
+          {expiryDate < now ? <Typography variant='h5' className={classes.expired}>expired</Typography> : <div></div>}
         </div>
       </MenuItem>
     )
