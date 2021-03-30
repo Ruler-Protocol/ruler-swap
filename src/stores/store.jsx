@@ -368,6 +368,9 @@ class Store {
       // set store selected pool value
       store.setStore({ selectedPool: selectedPool })
 
+      // add pool address to url
+      window.history.pushState({}, null, selectedPool.address); 
+
       // get the underlying asset balances for the selected pool
       const underlyingBalances = await this._getUnderlyingBalances(selectedPool);
 
