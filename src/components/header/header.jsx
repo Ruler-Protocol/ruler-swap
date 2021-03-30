@@ -212,7 +212,15 @@ class Header extends Component {
   }
 
   nav = (screen) => {
-    this.props.history.push('/'+screen)
+
+    const pool = store.getStore('selectedPool')
+
+    // keep pool in url if it exists
+    if (pool && pool.address && screen !== 'add')
+      this.props.history.push(`/${screen}/${pool.address}`)
+    else
+      this.props.history.push(`/${screen}`)
+
   }
 
   addressClicked = () => {

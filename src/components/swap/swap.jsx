@@ -228,6 +228,15 @@ const styles = theme => ({
     background: 'rgba(25, 101, 233, 0.5)',
     fontSize: '12px'
   },
+  expired: {
+    border: '1px solid '+colors.red,
+    padding: '6px',
+    width: 'fit-content',
+    borderRadius: '10px',
+    background: colors.red,
+    color: 'white',
+    fontSize: '12px'
+  },
   poolSelectOption: {
     display: 'flex',
     alignItems: 'center',
@@ -489,11 +498,28 @@ class Swap extends Component {
   renderPoolOption = (option) => {
     const { classes } = this.props
 
+    // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
+    const name = option.name.substring(option.name.indexOf(":") + 2);
+
+    // get the expiry
+    const expiry = name.split('_').slice(Math.max(name.split('_').length - 3, 1))
+    const year = expiry[0];
+    const month = expiry[1];
+    const day = expiry[2];
+
+    // create date of expiry
+    const expiryDate = new Date(`${year}-${month}-${day}`);
+    const now = new Date();
+
+
     return (
       <MenuItem key={option.id} value={option.id} className={ classes.assetSelectMenu }>
         <div className={ classes.poolSelectOption }>
-          <Typography variant='h4'>{ option.name }</Typography>
-          <Typography variant='h5' className={`${ option.version === 1 ? classes.version1 : classes.version2 }`}>version { option.version }</Typography>
+          <div>
+            <Typography variant='h4'>{ name }</Typography>
+            { option.balance < 0 ? <Typography variant='subtitle2' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
+          </div>
+          {expiryDate <  now ? <Typography variant='h5' className={classes.expired}>expired</Typography> : <div></div>}
         </div>
       </MenuItem>
     )

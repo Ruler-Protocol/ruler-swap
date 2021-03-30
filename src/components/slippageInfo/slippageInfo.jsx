@@ -7,6 +7,7 @@ import { colors } from '../../theme'
 const styles = () => ({
   alert: {
     marginTop: '12px',
+    minWidth: '100%'
   },
   infoAlert: {
     backgroundColor: colors.gray,

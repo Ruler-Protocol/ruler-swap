@@ -276,6 +276,9 @@ class Store {
 
       const { pool } = payload.content
 
+      // update url
+      window.history.pushState({}, null, pool.address); 
+
       // get the underlying asset balances for the selected pool
       const underlyingBalances = await this._getUnderlyingBalances(pool);
 
