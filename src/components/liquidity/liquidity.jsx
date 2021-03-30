@@ -7,6 +7,8 @@ import {
   TextField,
   MenuItem,
   Button,
+  FormControlLabel,
+  Checkbox
 } from '@material-ui/core';
 import { colors } from '../../theme'
 
@@ -72,6 +74,7 @@ const styles = theme => ({
   balances: {
     textAlign: 'right',
     paddingRight: '20px',
+    marginTop: '10px',
     cursor: 'pointer'
   },
   assetSelectMenu: {
@@ -251,6 +254,7 @@ class Liquidity extends Component {
       withdrawAsset: 'Mixture',
       poolAmountError: false,
       loading: !(pools && pools.length > 0 && pools[0].assets.length > 0),
+      showExpired: false,
       activeTab: 'deposit',
       ...this.getStateSliceUserBalancesForSelectedPool(selectedPool),
     }
@@ -283,7 +287,6 @@ class Liquidity extends Component {
 
   configureReturned = () => {
     const pools = store.getStore('pools')
-    console.log(pools);
 
     const selectedPool = store.getStore('selectedPool'); 
 
@@ -475,7 +478,8 @@ class Liquidity extends Component {
       loading,
       poolAmount,
       poolAmountError,
-      selectedPool
+      selectedPool,
+      showExpired
     } = this.state
 
     return (
@@ -484,8 +488,11 @@ class Liquidity extends Component {
           <div className={ classes.label }>
             <Typography variant='h4'>pool</Typography>
           </div>
-          <div className={ classes.balances }>
-            { (selectedPool ? (<Typography variant='h4' onClick={ () => { this.setAmount('pool', (selectedPool ? floatToFixed(selectedPool.balance, selectedPool.decimals) : '0')) } } className={ classes.value } noWrap>{ ''+ ( selectedPool && selectedPool.balance ? floatToFixed(selectedPool.balance, 4) : '0.0000') } { selectedPool ? selectedPool.id : '' }</Typography>) : <Typography variant='h4' className={ classes.value } noWrap>Balance: -</Typography>) }
+          <div>
+            <FormControlLabel
+								control={<Checkbox checked={showExpired} onClick={() => this.setState({showExpired: !showExpired})} name='showExpired' />}
+								label='Show expired pools'
+						/>
           </div>
         </div>
         <div>
@@ -504,6 +511,9 @@ class Liquidity extends Component {
               endAdornment: <div className={ classes.assetContainer }>{ this.renderPoolSelectAsset("pool") }</div>,
             }}
           />
+        </div>
+        <div className={ classes.balances }>
+          { (selectedPool ? (<Typography variant='h4' onClick={ () => { this.setAmount('pool', (selectedPool ? floatToFixed(selectedPool.balance, selectedPool.decimals) : '0')) } } className={ classes.value } noWrap>{ ''+ ( selectedPool && selectedPool.balance ? floatToFixed(selectedPool.balance, 4) : '0.0000') } { selectedPool ? selectedPool.id : '' }</Typography>) : <Typography variant='h4' className={ classes.value } noWrap>Balance: -</Typography>) }
         </div>
       </div>
     )
@@ -617,7 +627,7 @@ class Liquidity extends Component {
   }
 
   renderPoolSelect = (id) => {
-    const { loading, pools, pool } = this.state
+    const { loading, pools, pool, showExpired } = this.state
     const { classes } = this.props
 
     return (
@@ -626,7 +636,11 @@ class Liquidity extends Component {
           <div className={ classes.label }>
             <Typography variant='h4'>pool</Typography>
           </div>
-          <div className={ classes.balances }>
+          <div>
+            <FormControlLabel
+								control={<Checkbox checked={showExpired} onClick={() => this.setState({showExpired: !showExpired})} name='showExpired' />}
+								label='Show expired pools'
+						/>
           </div>
         </div>
         <div>
@@ -652,7 +666,7 @@ class Liquidity extends Component {
             className={ classes.actionInput }
             placeholder={ 'Select' }
           >
-            { pools ? pools.filter((pool) => { return pool.version === 2; }).map((pool) => { return this.renderPoolOption(pool) }) : null }
+            { pools ? pools.map((pool) => { return this.renderPoolOption(pool) }) : null }
           </TextField>
         </div>
       </div>
@@ -661,6 +675,7 @@ class Liquidity extends Component {
 
   renderPoolOption = (option) => {
     const { classes } = this.props
+    const { showExpired } = this.state;
 
     // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
     const name = option.name.substring(option.name.indexOf(":") + 2);
@@ -674,20 +689,22 @@ class Liquidity extends Component {
     // create date of expiry
     const expiryDate = new Date(`${year}-${month}-${day}`);
     const now = new Date();
+    const expired = expiryDate < now;
 
-    return (
-      <MenuItem key={option.id} value={option.id} className={ classes.assetSelectMenu }>
-        <React.Fragment>
-          <div className={ classes.poolSelectOption }>
-            <div>
-              <Typography variant='h4'>{ name }</Typography>
-              { option.balance > 0 ? <Typography variant='subtitle2' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
+    if (!expired || showExpired)
+      return (
+        <MenuItem key={option.id} value={option.id} className={ classes.assetSelectMenu }>
+          <React.Fragment>
+            <div className={ classes.poolSelectOption }>
+              <div>
+                <Typography variant='h4'>{ name }</Typography>
+                { option.balance > 0 ? <Typography variant='subtitle2' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
+              </div>
+              {expired ? <Typography variant='h5' className={classes.expired}>expired</Typography> : <div></div>}
             </div>
-            {expiryDate < now ? <Typography variant='h5' className={classes.expired}>expired</Typography> : <div></div>}
-          </div>
-        </React.Fragment>
-      </MenuItem>
-    )
+          </React.Fragment>
+        </MenuItem>
+      )
   }
 
   renderDeposit = () => {

@@ -6,6 +6,8 @@ import {
   TextField,
   MenuItem,
   Button,
+  FormControlLabel,
+  Checkbox
 } from '@material-ui/core';
 import SwapVertIcon from '@material-ui/icons/SwapVert';
 import { colors } from '../../theme'
@@ -452,7 +454,7 @@ class Swap extends Component {
   };
 
   renderPoolSelect = () => {
-    const { loading, pools, pool, selectedPool } = this.state
+    const { loading, pools, pool, selectedPool, showExpired } = this.state
     const { classes } = this.props
 
     return (
@@ -461,7 +463,11 @@ class Swap extends Component {
           <div className={ classes.label }>
             <Typography variant='h4'>pool</Typography>
           </div>
-          <div className={ classes.balances }>
+          <div>
+            <FormControlLabel
+								control={<Checkbox checked={showExpired} onClick={() => this.setState({showExpired: !showExpired})} name='showExpired' />}
+								label='Show expired pools'
+						/>
           </div>
         </div>
         <div>
