@@ -607,11 +607,51 @@ class Store {
     })
   }
 
+  _getBurnAmount = async (pool, amounts) => {
+    try {
+      const web3 = await this._getWeb3Provider();
+
+      const amountsBN = amounts.map((amount, index) => {
+        let amountToSend = web3.utils.toWei(amount, "ether")
+        if (pool.assets[index].decimals !== 18) {
+          const decimals = new BigNumber(10)
+            .pow(pool.assets[index].decimals)
+
+          amountToSend = new BigNumber(amount)
+            .times(decimals)
+            .toFixed(0)
+        }
+
+        return amountToSend
+      })
+
+      // get the index of the asset being removed
+      const zapContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress);
+
+      const receiveAmountBn = await zapContract.methods.calc_token_amount(pool.address, amountsBN, false).call();
+      const receiveAmount = bnToFixed(receiveAmountBn, 18);
+
+      return (receiveAmount);
+
+    } catch(ex) {
+      console.log(ex)
+      emitter.emit(ERROR, ex)
+      emitter.emit(SNACKBAR_ERROR, ex)
+    }
+
+  }
+
   withdraw = async (payload) => {
     try {
-      const { pool, amount, amounts } = payload.content
+      const { pool, amount: _amount, amounts } = payload.content
       const account = store.getStore('account')
       const web3 = await this._getWeb3Provider()
+
+      // const amount = (parseFloat(_amount) + (parseFloat(_amount) * 0.01)).toString();
+      // console.log(amount);
+      // const amount = await this._getBurnAmount(pool, amounts);
+      const amount = _amount;
+
 
       let amountToSend = web3.utils.toWei(amount, "ether")
       if (pool.decimals !== 18) {
@@ -623,11 +663,24 @@ class Store {
           .toFixed(0)
       }
 
-
       await this._checkApproval2({erc20address:pool.address, decimals:18}, account, amountToSend, pool.liquidityAddress)
 
+      const amountsBN = amounts.map((amount, index) => {
 
-      this._callRemoveLiquidity(web3, account, pool, amountToSend, amounts, (err, a) => {
+        let amountToSend = web3.utils.toWei(amount, "ether")
+        if (pool.assets[index].decimals !== 18) {
+          const decimals = new BigNumber(10)
+            .pow(pool.assets[index].decimals)
+
+          amountToSend = new BigNumber(amount)
+            .times(decimals)
+            .toFixed(0)
+        }
+
+        return amountToSend
+      })
+
+      this._callRemoveLiquidity(web3, account, pool, amountToSend, amountsBN, (err, a) => {
         if(err) {
           emitter.emit(ERROR, err)
           return emitter.emit(SNACKBAR_ERROR, err)
@@ -643,33 +696,19 @@ class Store {
     }
   }
 
-  _callRemoveLiquidity = async (web3, account, pool, amountToSend, amounts, callback) => {
-    const metapoolContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress)
+  _callRemoveLiquidity = async (web3, account, pool, amountToSend, amountsBN, callback) => {
+    const zapContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress)
 
     //calcualte minimum amounts ?
 
     let assets = 0;
 
     // determine if single sided removal or not
-    for (const amount of amounts) {
+    for (const amount of amountsBN) {
       if (parseFloat(amount) !== 0)
         assets++;
     }
-
-    // convert amounts array to BN array
-    const amountsBN = amounts.map((amount, index) => {
-      let amountToSend = web3.utils.toWei(amount, "ether")
-      if (pool.assets[index].decimals !== 18) {
-        const decimals = new BigNumber(10)
-          .pow(pool.assets[index].decimals)
-
-        amountToSend = new BigNumber(amount)
-          .times(decimals)
-          .toFixed(0)
-      }
-
-      return amountToSend
-    })
+    
 
     if (assets === 1) {
 
@@ -677,7 +716,7 @@ class Store {
       const index = amountsBN.findIndex(asset => parseInt(asset) !== 0);
 
       // single sided removal      
-      metapoolContract.methods.remove_liquidity_one_coin(pool.address, amountToSend, index, 0, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+      await zapContract.methods.remove_liquidity_one_coin(pool.address, amountToSend, index, 0, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
       .on('transactionHash', function(hash){
         emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
         callback(null, hash)
@@ -700,7 +739,7 @@ class Store {
     } else if (assets > 1 && assets < amountsBN.length) {
 
       // imbalanced removal
-      metapoolContract.methods.remove_liquidity_imbalance(pool.address, amountsBN, amountToSend, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+      await zapContract.methods.remove_liquidity_imbalance(pool.address, amountsBN, amountToSend, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
       .on('transactionHash', function(hash){
         emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
         callback(null, hash)
@@ -723,7 +762,7 @@ class Store {
     } else {
 
       // remove all
-      metapoolContract.methods.remove_liquidity(pool.address, amountToSend, [0, 0, 0, 0]).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+      await zapContract.methods.remove_liquidity(pool.address, amountToSend, [0, 0, 0, 0]).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
       .on('transactionHash', function(hash){
         emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
         callback(null, hash)
@@ -950,19 +989,18 @@ class Store {
       })
 
       // get the index of the asset being removed
-      const index = amountsBN.findIndex(asset => parseInt(asset) !== 0);
       const zapContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress)
       const poolContract = new web3.eth.Contract(config.metapoolABI, pool.address)
 
-
       const [receiveAmountBn, virtPriceBn] = await Promise.all([
-        zapContract.methods.calc_withdraw_one_coin(pool.address, amountsBN[index], index).call(),
+        zapContract.methods.calc_token_amount(pool.address, amountsBN, false).call(),
         poolContract.methods.get_virtual_price().call(),
       ])
 
       const receiveAmount = bnToFixed(receiveAmountBn, 18)
       let slippage;
 
+      console.log(receiveAmount);
 
       if (Number(receiveAmount)) {
         const virtualValue = multiplyBnToFixed(virtPriceBn, receiveAmountBn, 18)
