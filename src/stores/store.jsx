@@ -971,8 +971,11 @@ class Store {
 
   getWithdrawAmount = async (payload) => {
     try {
-      const { pool, amounts } = payload.content
+      const { pool, amounts, poolAmount } = payload.content
       const web3 = await this._getWeb3Provider()
+
+      const amountToSend = web3.utils.toWei(poolAmount, "ether")
+      console.log(amountToSend)
 
       const amountsBN = amounts.map((amount, index) => {
         let amountToSend = web3.utils.toWei(amount, "ether")
@@ -988,19 +991,36 @@ class Store {
         return amountToSend
       })
 
-      // get the index of the asset being removed
       const zapContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress)
       const poolContract = new web3.eth.Contract(config.metapoolABI, pool.address)
 
-      const [receiveAmountBn, virtPriceBn] = await Promise.all([
-        zapContract.methods.calc_token_amount(pool.address, amountsBN, false).call(),
-        poolContract.methods.get_virtual_price().call(),
-      ])
+      let receiveAmountBn, virtPriceBn;
+
+      // get the index of the asset being removed
+      const index = amountsBN.findIndex(asset => parseInt(asset) !== 0);
+      if (index === -1) return;
+
+      // determine if single sided removal or not
+      let assets = 0;
+      for (const amount of amountsBN) {
+        if (parseFloat(amount) !== 0)
+          assets++;
+      }
+
+      // different calculations for different number of assets
+      if (assets === 1)
+        [receiveAmountBn, virtPriceBn] = await Promise.all([
+          zapContract.methods.calc_token_amount(pool.address, amountsBN, false).call(),
+          poolContract.methods.get_virtual_price().call(),
+        ])
+      else 
+        [receiveAmountBn, virtPriceBn] = await Promise.all([
+          zapContract.methods.calc_withdraw_one_coin(pool.address, amountToSend, index).call(),
+          poolContract.methods.get_virtual_price().call(),
+        ])
 
       const receiveAmount = bnToFixed(receiveAmountBn, 18)
       let slippage;
-
-      console.log(receiveAmount);
 
       if (Number(receiveAmount)) {
         const virtualValue = multiplyBnToFixed(virtPriceBn, receiveAmountBn, 18)

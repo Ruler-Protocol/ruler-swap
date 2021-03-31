@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
 import { withStyles } from '@material-ui/core/styles';
 import PoolSeedingCTA from '../poolSeedingCTA'
+import { Alert } from '@material-ui/lab'
 import {
   Typography,
   TextField,
@@ -48,6 +49,9 @@ const styles = theme => ({
     width: '100%',
     justifyContent: 'flex-start',
     alignItems: 'center'
+  },
+  alert: {
+    maxWidth: '588px',
   },
   inputContainer: {
     display: 'flex',
@@ -439,7 +443,7 @@ class Liquidity extends Component {
         amounts.push(futureState[selectedPool.assets[i].symbol+'Amount'])
     }
 
-    dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts }})
+    dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts, poolAmount: poolAmount.toString()}})
 
     futureState['poolAmount'] = amount.toString();
     this.setState(futureState);
@@ -733,25 +737,23 @@ class Liquidity extends Component {
 
   renderPoolOption = (option) => {
     const { classes } = this.props
+    const { showExpired } = this.state;
 
     // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
     const name = option.name.substring(option.name.indexOf(":") + 2);
 
     // get the expiry
-    /*
     const expiry = name.split('_').slice(Math.max(name.split('_').length - 3, 1))
     const year = expiry[0];
     const month = expiry[1];
     const day = expiry[2];
 
-    create date of expiry
+    // date of expiry
     const expiryDate = new Date(`${year}-${month}-${day}`);
     const now = new Date();
     const expired = expiryDate <= now;
-    */
-    const expired = false;
 
-    // if (!expired || showExpired)
+    if (!expired || showExpired)
       return (
         <MenuItem key={option.id} value={option.id} className={ classes.assetSelectMenu }>
           <React.Fragment>
@@ -907,8 +909,8 @@ class Liquidity extends Component {
       poolAmount, 
       selectedPool, 
       poolAmountError,
-      slippagePcent } = this.state;
-    // const isAuthorized = localStorage.getItem("password") === "RulerAdmin";
+      slippagePcent,
+      withdrawAsset } = this.state;
 
     // button disabled conditions
     const disabled = !poolAmount || 
@@ -916,6 +918,8 @@ class Liquidity extends Component {
                       parseFloat(poolAmount) === 0 ||
                       poolAmountError || 
                       loading;
+
+    const isAuthorized = localStorage.getItem("password") === "RulerAdmin";
 
     return (
       <React.Fragment>
@@ -926,7 +930,12 @@ class Liquidity extends Component {
           })
         }
         { this.renderAssetSelect("Withdraw In") }
-        <SlippageInfo slippagePcent={slippagePcent} />
+        { withdrawAsset.length > 1 && withdrawAsset.length < selectedPool.assets.length ? 
+        <div className={classes.alert}>
+        <Alert severity="info">If you withdraw 2-3 assets only, due to <a href="https://curve.readthedocs.io/factory-pools.html#StableSwap.remove_liquidity_imbalance">Curve calculation</a>, you will be left with some dust</Alert> 
+        </div>
+        : ''}
+        { withdrawAsset.length === 1 || isAuthorized ? <SlippageInfo slippagePcent={slippagePcent} /> : ''}
         <Button
           className={ classes.actionButton }
           variant="outlined"

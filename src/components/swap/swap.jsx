@@ -520,26 +520,22 @@ class Swap extends Component {
 
   renderPoolOption = (option) => {
     const { classes } = this.props;
+    const { showExpired } = this.state;
 
     // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
     const name = option.name.substring(option.name.indexOf(":") + 2);
 
     // get the expiry
-    /*
     const expiry = name.split('_').slice(Math.max(name.split('_').length - 3, 1));
     const year = expiry[0];
     const month = expiry[1];
     const day = expiry[2];
 
-    create date of expiry
     const expiryDate = new Date(`${year}-${month}-${day}`);
     const now = new Date();
     const expired = expiryDate <= now;
-    */
-    const expired = false;
 
-
-    // if (!expired || showExpired)
+    if (!expired || showExpired)
       return (
         <MenuItem key={option.id} value={option.id} className={ classes.assetSelectMenu }>
           <div className={ classes.poolSelectOption }>
