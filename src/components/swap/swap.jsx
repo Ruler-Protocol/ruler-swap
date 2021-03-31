@@ -83,7 +83,7 @@ const styles = theme => ({
     display: 'flex',
     flexDirection: 'column',
     width: '100%',
-    marginBottom: '24px'
+    marginBottom: '40px'
   },
   balances: {
     textAlign: 'right',
@@ -182,7 +182,24 @@ const styles = theme => ({
   },
   label: {
     flex: 1,
-    paddingLeft: '12px'
+    paddingLeft: '12px',
+    paddingBottom: '3px',
+    display: 'flex',
+    alignItems: 'flex-end'
+  },
+  showExpired: {
+    flex: 1,
+    paddingLeft: '12px',
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    maxHeight: '20px',
+    '& span': {
+      padding: '0',
+    },
+    '& label': {
+      transform: 'translateY(1px)'
+    }
   },
   between: {
     width: '24px'
@@ -463,7 +480,7 @@ class Swap extends Component {
           <div className={ classes.label }>
             <Typography variant='h4'>pool</Typography>
           </div>
-          <div>
+          <div className={ classes.showExpired }>
             <FormControlLabel
 								control={<Checkbox checked={showExpired} onClick={() => this.setState({showExpired: !showExpired})} name='showExpired' />}
 								label='Show expired pools'
@@ -502,13 +519,14 @@ class Swap extends Component {
   }
 
   renderPoolOption = (option) => {
-    const { classes } = this.props
+    const { classes } = this.props;
+    const { showExpired }= this.state;
 
     // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
     const name = option.name.substring(option.name.indexOf(":") + 2);
 
     // get the expiry
-    const expiry = name.split('_').slice(Math.max(name.split('_').length - 3, 1))
+    const expiry = name.split('_').slice(Math.max(name.split('_').length - 3, 1));
     const year = expiry[0];
     const month = expiry[1];
     const day = expiry[2];
@@ -516,19 +534,21 @@ class Swap extends Component {
     // create date of expiry
     const expiryDate = new Date(`${year}-${month}-${day}`);
     const now = new Date();
+    const expired = expiryDate <= now;
 
 
-    return (
-      <MenuItem key={option.id} value={option.id} className={ classes.assetSelectMenu }>
-        <div className={ classes.poolSelectOption }>
-          <div>
-            <Typography variant='h4'>{ name }</Typography>
-            { option.balance > 0 ? <Typography variant='subtitle2' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
+    if (!expired || showExpired)
+      return (
+        <MenuItem key={option.id} value={option.id} className={ classes.assetSelectMenu }>
+          <div className={ classes.poolSelectOption }>
+            <div>
+              <Typography variant='h4'>{ name }</Typography>
+              { option.balance > 0 ? <Typography variant='subtitle2' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
+            </div>
+            { expired ? <Typography variant='h5' className={classes.expired}>expired</Typography> : <div></div>}
           </div>
-          {expiryDate < now ? <Typography variant='h5' className={classes.expired}>expired</Typography> : <div></div>}
-        </div>
-      </MenuItem>
-    )
+        </MenuItem>
+      )
   }
 
   renderAssetInput = (type) => {

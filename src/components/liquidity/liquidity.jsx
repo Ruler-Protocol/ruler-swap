@@ -105,9 +105,6 @@ const styles = theme => ({
   assetAdornment: {
     color: colors.text + ' !important'
   },
-  assetContainer: {
-    minWidth: '120px'
-  },
   assetLogo: {
     marginRight: '8px'
   },
@@ -181,9 +178,26 @@ const styles = theme => ({
   },
   label: {
     flex: 1,
-    paddingLeft: '12px'
+    paddingLeft: '12px',
+    paddingBottom: '3px',
+    display: 'flex',
+    alignItems: 'flex-end'
   },
-    assetSelectRoot: {
+  showExpired: {
+    flex: 1,
+    paddingLeft: '12px',
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    maxHeight: '20px',
+    '& span': {
+      padding: '0',
+    },
+    '& label': {
+      transform: 'translateY(1px)'
+    }
+  },
+  assetSelectRoot: {
     '& .MuiInput-input': {
       justifyContent: 'flex-end',
       overflow: 'visible',
@@ -488,7 +502,7 @@ class Liquidity extends Component {
           <div className={ classes.label }>
             <Typography variant='h4'>pool</Typography>
           </div>
-          <div>
+          <div className={ classes.showExpired }>
             <FormControlLabel
 								control={<Checkbox checked={showExpired} onClick={() => this.setState({showExpired: !showExpired})} name='showExpired' />}
 								label='Show expired pools'
@@ -636,7 +650,7 @@ class Liquidity extends Component {
           <div className={ classes.label }>
             <Typography variant='h4'>pool</Typography>
           </div>
-          <div>
+          <div className={ classes.showExpired }>
             <FormControlLabel
 								control={<Checkbox checked={showExpired} onClick={() => this.setState({showExpired: !showExpired})} name='showExpired' />}
 								label='Show expired pools'
@@ -689,7 +703,7 @@ class Liquidity extends Component {
     // create date of expiry
     const expiryDate = new Date(`${year}-${month}-${day}`);
     const now = new Date();
-    const expired = expiryDate < now;
+    const expired = expiryDate <= now;
 
     if (!expired || showExpired)
       return (

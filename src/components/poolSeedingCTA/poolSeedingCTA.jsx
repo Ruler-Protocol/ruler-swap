@@ -6,7 +6,7 @@ import { useHistory } from 'react-router-dom'
 
 const styles = () => ({
   alert: {
-    maxWidth: '438px',
+    maxWidth: '500px',
     margin: '0 auto',
   },
   link: {
