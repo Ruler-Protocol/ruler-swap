@@ -345,7 +345,7 @@ class Liquidity extends Component {
 
   }
 
-   getWithdrawAmount = (newStateSlice = {}) => {
+  getWithdrawAmount = (newStateSlice = {}) => {
 
     const { selectedPool, underlyingBalances } = this.state
     const { poolAmount } = newStateSlice;
@@ -415,13 +415,6 @@ class Liquidity extends Component {
     }
 
     dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts }})
-    /*
-    // get slippage info on single sided input
-    if (amounts.filter(num => parseFloat(num) !== 0).length === 1)
-      dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts, burn: selectedPool.balance}})
-    else 
-      futureState['slippagePcent'] = undefined;
-    */
 
     futureState['poolAmount'] = amount.toString();
     this.setState(futureState);
