@@ -975,8 +975,7 @@ class Store {
       const web3 = await this._getWeb3Provider()
 
       const amountToSend = web3.utils.toWei(poolAmount, "ether")
-      console.log(amountToSend)
-
+      
       const amountsBN = amounts.map((amount, index) => {
         let amountToSend = web3.utils.toWei(amount, "ether")
         if (pool.assets[index].decimals !== 18) {

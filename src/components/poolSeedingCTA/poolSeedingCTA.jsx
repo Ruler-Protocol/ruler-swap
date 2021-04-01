@@ -6,8 +6,8 @@ import { useHistory } from 'react-router-dom'
 
 const styles = () => ({
   alert: {
-    maxWidth: '500px',
     margin: '0 auto',
+    width: '100%'
   },
   link: {
     color: 'inherit',

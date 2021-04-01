@@ -55,6 +55,7 @@ const styles = theme => ({
     justifyContent: 'flex-start',
     margin: '40px 0px',
     border: '1px solid '+colors.pink,
+    maxWidth: '650px',
     minWidth: '650px',
     background: colors.white
   },
@@ -194,12 +195,13 @@ const styles = theme => ({
     alignItems: 'flex-end',
     justifyContent: 'flex-end',
     maxHeight: '20px',
+    '& svg': {
+      transform: 'translateY(-1px)'
+    },
     '& span': {
       padding: '0',
+      marginLeft: '2px',
     },
-    '& label': {
-      transform: 'translateY(1px)'
-    }
   },
   between: {
     width: '24px'

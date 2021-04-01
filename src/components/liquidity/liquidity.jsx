@@ -45,13 +45,13 @@ const styles = theme => ({
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    maxWidth: '1200px',
     width: '100%',
     justifyContent: 'flex-start',
     alignItems: 'center'
   },
   alert: {
-    maxWidth: '588px',
+    width: '100%',
+    margin: '5px 0'
   },
   inputContainer: {
     display: 'flex',
@@ -63,6 +63,7 @@ const styles = theme => ({
     margin: '40px 0px',
     border: '1px solid '+colors.pink,
     minWidth: '650px',
+    maxWidth: '650px',
     background: colors.white
   },
   inputCardHeading: {
@@ -195,12 +196,13 @@ const styles = theme => ({
     alignItems: 'flex-end',
     justifyContent: 'flex-end',
     maxHeight: '20px',
+    '& svg': {
+      transform: 'translateY(-1px)'
+    },
     '& span': {
       padding: '0',
+      marginLeft: '2px',
     },
-    '& label': {
-      transform: 'translateY(1px)'
-    }
   },
   assetSelectRoot: {
     '& .MuiInput-input': {
@@ -437,13 +439,14 @@ class Liquidity extends Component {
     // amounts for slippage
     let amounts = [];
     for(let i = 0; i < selectedPool.assets.length; i++) {
-      if (futureState[selectedPool.assets[i].symbol+'Amount'] === '')
+      if (!futureState[selectedPool.assets[i].symbol+'Amount'] || 
+           futureState[selectedPool.assets[i].symbol+'Amount'] === '')
         amounts.push('0')
       else
         amounts.push(futureState[selectedPool.assets[i].symbol+'Amount'])
     }
 
-    if (poolAmount)
+    if (!isNaN(poolAmount) && poolAmount && parseFloat(poolAmount) !== 0)
       dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts, poolAmount: poolAmount.toString()}})
 
     futureState['poolAmount'] = amount.toString();
@@ -933,7 +936,7 @@ class Liquidity extends Component {
         { this.renderAssetSelect("Withdraw In") }
         { withdrawAsset.length > 1 && withdrawAsset.length < selectedPool.assets.length ? 
         <div className={classes.alert}>
-        <Alert severity="info">If you withdraw 2-3 assets only, due to <a href="https://curve.readthedocs.io/factory-pools.html#StableSwap.remove_liquidity_imbalance">Curve calculation</a>, you will be left with some dust</Alert> 
+        <Alert severity="info">If you withdraw 2-3 assets only, due to <a href="https://curve.readthedocs.io/factory-pools.html#StableSwap.remove_liquidity_imbalance" rel="noopener noreferrer" target="_blank">Curve calculation</a>, you will be left with some dust</Alert> 
         </div>
         : ''}
         { withdrawAsset.length === 1 || isAuthorized ? <SlippageInfo slippagePcent={slippagePcent} /> : ''}
