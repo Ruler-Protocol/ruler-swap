@@ -443,7 +443,8 @@ class Liquidity extends Component {
         amounts.push(futureState[selectedPool.assets[i].symbol+'Amount'])
     }
 
-    dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts, poolAmount: poolAmount.toString()}})
+    if (poolAmount)
+      dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts, poolAmount: poolAmount.toString()}})
 
     futureState['poolAmount'] = amount.toString();
     this.setState(futureState);
@@ -755,7 +756,7 @@ class Liquidity extends Component {
 
     if (!expired || showExpired)
       return (
-        <MenuItem key={option.id} value={option.id} className={ classes.assetSelectMenu }>
+        <MenuItem key={option.name} value={option.name} className={ classes.assetSelectMenu }>
           <React.Fragment>
             <div className={ classes.poolSelectOption }>
               <div>
@@ -1013,12 +1014,13 @@ class Liquidity extends Component {
   }
 
   onPoolSelectChange = (event) => {
+
     const selectedPool = this.state.pools.find((pool) => {
-      return pool.id === event.target.value
+      return pool.name=== event.target.value
     })
 
     const newStateSlice = {
-      [event.target.name]: event.target.value,
+      [event.target.name]: selectedPool.symbol,
       selectedPool,
       ...this.getStateSliceUserBalancesForSelectedPool(selectedPool),
     };
@@ -1032,9 +1034,11 @@ class Liquidity extends Component {
 
     // If an url fragment was used to auto-select a pool, remove that
     // fragment when we change pool to revert to the naked /liquidity url.
+    /*
     if (this.props.history.location.hash !== '') {
       this.props.history.replace('/liquidity');
     }
+    */
   }
 
   // determine if user has sufficient balance for withdrawals
