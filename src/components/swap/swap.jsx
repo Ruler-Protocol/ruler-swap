@@ -537,7 +537,7 @@ class Swap extends Component {
 
     if (!expired || showExpired)
       return (
-        <MenuItem key={option.id} value={option.id} className={ classes.assetSelectMenu }>
+        <MenuItem key={option.name} value={option.name} className={ classes.assetSelectMenu }>
           <div className={ classes.poolSelectOption }>
             <div>
               <Typography variant='h4'>{ name }</Typography>
@@ -685,11 +685,12 @@ class Swap extends Component {
     this.setState(val)
 
     const selectedPool = this.state.pools.find((pool) => {
-      return pool.id === event.target.value
+      return pool.name=== event.target.value
     })
 
     //on change pool change assets as well
     this.setState({
+      [event.target.name]: selectedPool.symbol,
       fromAsset: selectedPool.assets[0].symbol,
       toAsset: selectedPool.assets[1].symbol,
       selectedPool,
