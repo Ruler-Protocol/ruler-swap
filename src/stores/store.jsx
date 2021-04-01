@@ -40,7 +40,8 @@ import {
   GET_PRESELECTED_POOL,
   PRESELECTED_POOL_RETURNED,
   CHANGE_SELECTED_POOL,
-  SELECTED_POOL_CHANGED
+  SELECTED_POOL_CHANGED,
+  GET_WITHDRAW_AMOUNT_RETURNED
   
 } from '../constants'
 import Web3 from 'web3'
@@ -1029,7 +1030,9 @@ class Store {
       }
 
 
-      // emitter.emit(GET_DEPOSIT_AMOUNT_RETURNED, parseFloat(receiveAmount))
+      if (assets === 1)
+        emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, asset: pool.assets[index]})
+
       emitter.emit(SLIPPAGE_INFO_RETURNED, {
         slippagePcent: typeof slippage !== 'undefined' ? slippage * 100 : slippage,
       })

@@ -27,6 +27,7 @@ import {
   WITHDRAW,
   WITHDRAW_RETURNED,
   GET_WITHDRAW_AMOUNT,
+  GET_WITHDRAW_AMOUNT_RETURNED,
   GET_DEPOSIT_AMOUNT,
   GET_DEPOSIT_AMOUNT_RETURNED,
   SLIPPAGE_INFO_RETURNED,
@@ -294,6 +295,7 @@ class Liquidity extends Component {
     emitter.on(BALANCES_RETURNED, this.balancesReturned);
     emitter.on(PRESELECTED_POOL_RETURNED, this.preselectedPoolReturned);
     emitter.on(SELECTED_POOL_CHANGED, this.selectedPoolChanged);
+    emitter.on(GET_WITHDRAW_AMOUNT_RETURNED, this.getWithdrawAmountReturned)
   }
 
   componentWillUnmount() {
@@ -306,6 +308,7 @@ class Liquidity extends Component {
     emitter.removeListener(SLIPPAGE_INFO_RETURNED, this.slippageInfoReturned);
     emitter.removeListener(PRESELECTED_POOL_RETURNED, this.preselectedPoolReturned);
     emitter.removeListener(SELECTED_POOL_CHANGED, this.selectedPoolChanged);
+    emitter.removeListener(GET_WITHDRAW_AMOUNT_RETURNED, this.getWithdrawAmountReturned)
   };
 
   selectedPoolChanged = () => {
@@ -481,7 +484,10 @@ class Liquidity extends Component {
   }
 
   getWithdrawAmountReturned = (vals) => {
-    this.setState({ withdrawAmounts: vals })
+    const { withdrawAmount, asset } = vals;
+    this.setState({
+      [`${asset.symbol}Amount`]: withdrawAmount
+    })
   }
 
   balancesReturned = (balances) => {
