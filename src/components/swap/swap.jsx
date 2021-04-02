@@ -332,10 +332,10 @@ class Swap extends Component {
       selectedPool: selectedPool,
       fromAsset: selectedPool && selectedPool.assets.length > 0 ? selectedPool.assets[0].symbol : '',
       toAsset: selectedPool && selectedPool.assets.length > 0 ? selectedPool.assets[1].symbol : '',
-      loading: false
+      loading: false,
     })
 
-    // dispatcher.dispatch({ type: GET_BALANCES, content: {} })
+    dispatcher.dispatch({ type: GET_BALANCES, content: {} })
   };
 
   // determine if user has sufficient balance 
@@ -357,10 +357,10 @@ class Swap extends Component {
     this.setState({ account: store.getStore('account') })
   }
 
-  balancesReturned = (balances) => {
+  balancesReturned = () => {
     const pools = store.getStore('pools')
-    const selectedPool = store.getStore('selectedPool') 
 
+   const selectedPool = store.getStore('selectedPool') 
     this.setState({
       pools: pools,
       pool: selectedPool ? selectedPool.id : '',

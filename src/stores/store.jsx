@@ -1,6 +1,5 @@
 import config from '../config'
 import async from 'async'
-import memoize from 'memoizee'
 import BigNumber from 'bignumber.js'
 import { bnToFixed, multiplyBnToFixed, sumArray } from '../utils/numbers'
 
@@ -10,6 +9,8 @@ import {
 
   SNACKBAR_ERROR,
   SNACKBAR_TRANSACTION_HASH,
+  SNACKBAR_TRANSACTION_RECEIPT,
+  SNACKBAR_TRANSACTION_CONFIRMED,
   ERROR,
 
   CONFIGURE,
@@ -369,8 +370,10 @@ class Store {
       // set store selected pool value
       store.setStore({ selectedPool: selectedPool })
 
-      // add pool address to url
-      window.history.pushState({}, null, selectedPool.address); 
+      // navigate to swap if user visit site without swap/liquidity in url
+      if (window.location.pathname.indexOf('swap') === -1 && window.location.pathname.indexOf('liquidity') === -1)
+        // add pool address to url
+        window.history.pushState({}, null, `swap/${selectedPool.address}`); 
 
       // get the underlying asset balances for the selected pool
       const underlyingBalances = await this._getUnderlyingBalances(selectedPool);
@@ -395,7 +398,8 @@ class Store {
     return emitter.emit(BALANCES_RETURNED)
   }
 
-  _getCoinData = memoize(async ({ web3, filteredCoins, coinAddress, accountAddress }) => {
+  // was memoized by prevented token balance from being updated after deposit/withdraw
+  _getCoinData = async ({ web3, filteredCoins, coinAddress, accountAddress }) => {
     const erc20Contract0 = new web3.eth.Contract(config.erc20ABI, coinAddress)
 
     const symbol0 = await erc20Contract0.methods.symbol().call()
@@ -418,10 +422,7 @@ class Store {
       name: name0,
       balance: balance0
     }
-  }, {
-    promise: true,
-    normalizer: ([{ coinAddress, accountAddress }]) => `${coinAddress}-${accountAddress}`,
-  })
+  }
 
   _getPoolData = async (web3, pool, account, callback) => {
     try {
@@ -599,6 +600,7 @@ class Store {
     })
     .on('receipt', function(receipt){
       dispatcher.dispatch({ type: CONFIGURE, content: {} })
+      emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
     })
     .on('error', function(error) {
       if(error.message) {
@@ -723,12 +725,15 @@ class Store {
         callback(null, hash)
       })
       .on('confirmation', function(confirmationNumber, receipt){
+        console.log(confirmationNumber)
         if(confirmationNumber === 1) {
+          emitter.emit(SNACKBAR_TRANSACTION_CONFIRMED, receipt)
           dispatcher.dispatch({ type: CONFIGURE, content: {} })
         }
       })
       .on('receipt', function(receipt){
-          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+        dispatcher.dispatch({ type: CONFIGURE, content: {} })
+        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
       })
       .on('error', function(error) {
         if(error.message) {
@@ -751,7 +756,8 @@ class Store {
         }
       })
       .on('receipt', function(receipt){
-          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+        dispatcher.dispatch({ type: CONFIGURE, content: {} })
+        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt)
       })
       .on('error', function(error) {
         if(error.message) {
@@ -774,7 +780,8 @@ class Store {
         }
       })
       .on('receipt', function(receipt){
-          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt)
+        dispatcher.dispatch({ type: CONFIGURE, content: {} })
       })
       .on('error', function(error) {
         if(error.message) {
@@ -790,6 +797,11 @@ class Store {
     try {
       const { pool, from, to, amount } = payload.content
       const web3 = await this._getWeb3Provider()
+
+      if (from.erc20address === to.erc20address){
+        emitter.emit(SNACKBAR_ERROR, `You can't swap the same assets (${from.name} to ${to.name})`)
+        return;
+      }
 
       let amountToSend = web3.utils.toWei(amount, "ether")
       if (from.decimals !== 18) {
@@ -881,6 +893,8 @@ class Store {
       }
     })
     .on('receipt', function(receipt){
+      dispatcher.dispatch({ type: CONFIGURE, content: {} })
+      emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
     })
     .on('error', function(error) {
       if(error.message) {
@@ -961,6 +975,8 @@ class Store {
       }
     })
     .on('receipt', function(receipt){
+      dispatcher.dispatch({ type: CONFIGURE, content: {} })
+      emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
     })
     .on('error', function(error) {
       if(error.message) {

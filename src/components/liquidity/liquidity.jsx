@@ -322,9 +322,9 @@ class Liquidity extends Component {
   }
 
   configureReturned = () => {
-    const pools = store.getStore('pools')
 
-    const selectedPool = store.getStore('selectedPool'); 
+    const pools = store.getStore('pools')
+    const selectedPool = store.getStore('selectedPool')
 
     const newStateSlice = {
       account: store.getStore('account'),
@@ -490,13 +490,21 @@ class Liquidity extends Component {
     })
   }
 
-  balancesReturned = (balances) => {
+  balancesReturned = () => {
     const pools = store.getStore('pools')
     const selectedPool = store.getStore('selectedPool')
 
+    let balances = {}
+
+    // set asset balances
+    selectedPool.assets.forEach(asset => {
+      balances[`${asset.symbol}Amount`] = asset.balance
+    })
+
     this.setState({
       pools,
-      selectedPool 
+      selectedPool,
+      ...balances
     });
   };
 
