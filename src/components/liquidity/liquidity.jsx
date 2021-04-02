@@ -410,7 +410,7 @@ class Liquidity extends Component {
     ));
 
     // use pool input amount or sum of each input
-    const amount = poolAmount ? poolAmount : 
+    const amount = poolAmount ? parseFloat(poolAmount) : 
       sumArray(selectedPool.assets.filter((asset, i) => 
         withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1  
       ).map(asset => futureState[`${asset.symbol}Amount`]))
@@ -420,24 +420,18 @@ class Liquidity extends Component {
 
         if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
           // percent of the pool the asset has 
-          const percent = num / total;
+          const percent = num / total
 
           // how much of token i is to be received
-          const receive = parseFloat(amount) * percent;
+          const receive = parseFloat(amount) * percent
 
           // update state value
-          futureState[`${selectedPool.assets[i].symbol}Amount`] = receive.toFixed(18);
+          futureState[`${selectedPool.assets[i].symbol}Amount`] = receive.toString()
         } else {
-          futureState[`${selectedPool.assets[i].symbol}Amount`] = '0';
+          futureState[`${selectedPool.assets[i].symbol}Amount`] = '0'
         }
 
       });
-
-    // make sure total withdrawal is less than LP balance
-    if (parseFloat(amount) > parseFloat(selectedPool.balance))
-      futureState['poolAmountError'] = true;
-    else 
-      futureState['poolAmountError'] = false;
 
     // amounts for slippage
     let amounts = [];
@@ -449,11 +443,7 @@ class Liquidity extends Component {
         amounts.push(futureState[selectedPool.assets[i].symbol+'Amount'])
     }
 
-    if (!isNaN(poolAmount) && poolAmount && parseFloat(poolAmount) !== 0)
-      dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts, poolAmount: poolAmount.toString()}})
-
-    futureState['poolAmount'] = amount.toString();
-    this.setState(futureState);
+    dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts, poolAmount}})
 
   }
 
@@ -484,10 +474,50 @@ class Liquidity extends Component {
   }
 
   getWithdrawAmountReturned = (vals) => {
-    const { withdrawAmount, asset } = vals;
-    this.setState({
-      [`${asset.symbol}Amount`]: withdrawAmount
-    })
+    const { withdrawAmount, symbol } = vals;
+    const { selectedPool, underlyingBalances, withdrawAsset } = this.state
+
+    let futureState = {
+      ...this.state
+    };
+
+    if (symbol !== 'pool') {
+      const that = this;
+
+      // get the list of balances
+      const formattedArray = selectedPool.assets
+      .map(function(asset, i) {
+        return parseFloat(that.formatAssetBalance(underlyingBalances[i], asset.decimals))
+      })
+
+      // get the sum
+      const total = parseFloat(sumArray(formattedArray
+        .filter((asset, i) => withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1)  
+      ));
+
+      formattedArray.forEach(function(num, i){
+
+        if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
+          // percent of the pool the asset has 
+          const percent = num / total;
+
+          // how much of token i is to be received
+          const receive = parseFloat(withdrawAmount) * percent;
+
+          // update state value
+          futureState[`${selectedPool.assets[i].symbol}Amount`] = receive.toFixed(18);
+        } else {
+          futureState[`${selectedPool.assets[i].symbol}Amount`] = '0';
+        }
+
+      });
+
+      this.setState(futureState);
+    } else {
+      this.setState({
+        [`${symbol}Amount`]: withdrawAmount
+      })
+    }
   }
 
   balancesReturned = () => {
@@ -1131,7 +1161,7 @@ class Liquidity extends Component {
 
   onChange = (event) => {
 
-    const { activeTab } = this.state;
+    const { activeTab, withdrawAsset } = this.state;
 
     let newStateSlice = {}
 
@@ -1144,6 +1174,11 @@ class Liquidity extends Component {
       this.determineSufficientDepositBalance(symbol, event.target.value);
       this.getDepositAmount(newStateSlice);
     } else {
+
+      // don't allow typing into assets that aren't selected
+      if (withdrawAsset.indexOf(symbol) === -1 && symbol !== "pool") 
+        newStateSlice[event.target.id] = 0;
+
       this.getWithdrawAmount(newStateSlice);
     }
 
@@ -1171,6 +1206,7 @@ class Liquidity extends Component {
     // update
     newStateSlice['withdrawAsset'] = assets;
 
+    this.setState(newStateSlice);
     this.getWithdrawAmount(newStateSlice);
 
 
@@ -1267,7 +1303,9 @@ class Liquidity extends Component {
   onWithdraw = () => {
     this.setState({ poolAmountError: false })
 
-    const { poolAmount, selectedPool } = this.state;
+    const { poolAmount: amount, selectedPool } = this.state;
+
+    const poolAmount = parseFloat(amount);
 
     if(!poolAmount || isNaN(poolAmount) || poolAmount <= 0 || poolAmount > selectedPool.balance) {
       this.setState({ poolAmountError: true })
@@ -1286,7 +1324,7 @@ class Liquidity extends Component {
     }
 
     this.setState({ loading: true })
-    dispatcher.dispatch({ type: WITHDRAW, content: { amount: poolAmount, pool: selectedPool, amounts} })
+    dispatcher.dispatch({ type: WITHDRAW, content: { amount, pool: selectedPool, amounts} })
   }
 }
 

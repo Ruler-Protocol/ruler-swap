@@ -10,7 +10,6 @@ import {
   SNACKBAR_ERROR,
   SNACKBAR_TRANSACTION_HASH,
   SNACKBAR_TRANSACTION_RECEIPT,
-  SNACKBAR_TRANSACTION_CONFIRMED,
   ERROR,
 
   CONFIGURE,
@@ -650,23 +649,10 @@ class Store {
       const account = store.getStore('account')
       const web3 = await this._getWeb3Provider()
 
-      // const amount = (parseFloat(_amount) + (parseFloat(_amount) * 0.01)).toString();
+      // const amount = (parseFloat(_amount) + (parseFloat(_amount) * 0.1)).toString();
       // console.log(amount);
       // const amount = await this._getBurnAmount(pool, amounts);
-      const amount = _amount;
-
-
-      let amountToSend = web3.utils.toWei(amount, "ether")
-      if (pool.decimals !== 18) {
-        const decimals = new BigNumber(10)
-          .pow(pool.decimals)
-
-        amountToSend = new BigNumber(amount)
-          .times(decimals)
-          .toFixed(0)
-      }
-
-      await this._checkApproval2({erc20address:pool.address, decimals:18}, account, amountToSend, pool.liquidityAddress)
+      let amount = _amount;
 
       const amountsBN = amounts.map((amount, index) => {
 
@@ -682,6 +668,31 @@ class Store {
 
         return amountToSend
       })
+
+      /*
+      // determine if single sided removal or not
+      for (const amount of amountsBN) {
+        if (parseFloat(amount) !== 0)
+          assets++;
+      }
+      */
+
+      // if (assets > 1 && assets < pool.assets.length)
+        // amount = (parseFloat(_amount) + (parseFloat(_amount) * 0.1)).toString();
+
+      let amountToSend = web3.utils.toWei(amount, "ether")
+      if (pool.decimals !== 18) {
+        const decimals = new BigNumber(10)
+          .pow(pool.decimals)
+
+        amountToSend = new BigNumber(amount)
+          .times(decimals)
+          .toFixed(0)
+      }
+
+      await this._checkApproval2({erc20address:pool.address, decimals:18}, account, amountToSend, pool.liquidityAddress)
+
+
 
       this._callRemoveLiquidity(web3, account, pool, amountToSend, amountsBN, (err, a) => {
         if(err) {
@@ -711,7 +722,6 @@ class Store {
       if (parseFloat(amount) !== 0)
         assets++;
     }
-    
 
     if (assets === 1) {
 
@@ -727,7 +737,7 @@ class Store {
       .on('confirmation', function(confirmationNumber, receipt){
         console.log(confirmationNumber)
         if(confirmationNumber === 1) {
-          emitter.emit(SNACKBAR_TRANSACTION_CONFIRMED, receipt)
+          // emitter.emit(SNACKBAR_TRANSACTION_CONFIRMED, receipt)
           dispatcher.dispatch({ type: CONFIGURE, content: {} })
         }
       })
@@ -991,8 +1001,8 @@ class Store {
       const { pool, amounts, poolAmount } = payload.content
       const web3 = await this._getWeb3Provider()
 
-      const amountToSend = web3.utils.toWei(poolAmount, "ether")
-      
+      const amountToSend = poolAmount && !isNaN(poolAmount) ? web3.utils.toWei(poolAmount, "ether") : '-1'
+
       const amountsBN = amounts.map((amount, index) => {
         let amountToSend = web3.utils.toWei(amount, "ether")
         if (pool.assets[index].decimals !== 18) {
@@ -1010,30 +1020,14 @@ class Store {
       const zapContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress)
       const poolContract = new web3.eth.Contract(config.metapoolABI, pool.address)
 
-      let receiveAmountBn, virtPriceBn;
-
       // get the index of the asset being removed
       const index = amountsBN.findIndex(asset => parseInt(asset) !== 0);
       if (index === -1) return;
 
-      // determine if single sided removal or not
-      let assets = 0;
-      for (const amount of amountsBN) {
-        if (parseFloat(amount) !== 0)
-          assets++;
-      }
-
-      // different calculations for different number of assets
-      if (assets === 1)
-        [receiveAmountBn, virtPriceBn] = await Promise.all([
-          zapContract.methods.calc_token_amount(pool.address, amountsBN, false).call(),
-          poolContract.methods.get_virtual_price().call(),
-        ])
-      else 
-        [receiveAmountBn, virtPriceBn] = await Promise.all([
-          zapContract.methods.calc_withdraw_one_coin(pool.address, amountToSend, index).call(),
-          poolContract.methods.get_virtual_price().call(),
-        ])
+      const [receiveAmountBn, virtPriceBn] = await Promise.all([
+        zapContract.methods.calc_token_amount(pool.address, amountsBN, false).call(),
+        poolContract.methods.get_virtual_price().call(),
+      ])
 
       const receiveAmount = bnToFixed(receiveAmountBn, 18)
       let slippage;
@@ -1045,9 +1039,10 @@ class Store {
         slippage = (virtualValue / realValue) - 1;
       }
 
-
-      if (assets === 1)
-        emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, asset: pool.assets[index]})
+      if (amountToSend === '-1')
+        emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, symbol: 'pool'})
+      else
+        emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, symbol: pool.assets[index].symbol})
 
       emitter.emit(SLIPPAGE_INFO_RETURNED, {
         slippagePcent: typeof slippage !== 'undefined' ? slippage * 100 : slippage,
