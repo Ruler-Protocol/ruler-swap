@@ -1251,7 +1251,8 @@ class Liquidity extends Component {
     let amounts = []
 
     for(let i = 0; i < selectedPool.assets.length; i++) {
-      if (this.state[selectedPool.assets[i].symbol+'Amount'] === '')
+      if (this.state[selectedPool.assets[i].symbol+'Amount'] === '' || 
+          isNaN(this.state[selectedPool.assets[i].symbol+'Amount']))
         amounts.push('0')
       else
         amounts.push(this.state[selectedPool.assets[i].symbol+'Amount'])
