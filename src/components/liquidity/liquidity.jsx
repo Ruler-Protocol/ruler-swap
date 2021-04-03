@@ -474,7 +474,7 @@ class Liquidity extends Component {
   }
 
   getWithdrawAmountReturned = (vals) => {
-    const { withdrawAmount, symbol } = vals;
+    const { withdrawAmount, symbol, slippage } = vals;
     const { selectedPool, underlyingBalances, withdrawAsset } = this.state
 
     let futureState = {
@@ -495,14 +495,23 @@ class Liquidity extends Component {
         .filter((asset, i) => withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1)  
       ));
 
+      // difference between caculated burn and max_burn
+      const diff = parseFloat(futureState['poolAmount']) < parseFloat(withdrawAmount) ? 
+                    parseFloat(withdrawAmount) - parseFloat(futureState['poolAmount']) : 0
+
       formattedArray.forEach(function(num, i){
 
         if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
           // percent of the pool the asset has 
-          const percent = num / total;
+          const percent = num / total
 
+          let receive;
           // how much of token i is to be received
-          const receive = parseFloat(withdrawAmount) * percent;
+          // scale down by % difference between _max_burn and calculated burn 
+          if (diff > 0)
+            receive = (parseFloat(withdrawAmount) * percent) - (parseFloat(withdrawAmount) * slippage)
+          else
+            receive = parseFloat(withdrawAmount) * percent
 
           // update state value
           futureState[`${selectedPool.assets[i].symbol}Amount`] = receive.toFixed(18);

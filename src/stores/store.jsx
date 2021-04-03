@@ -651,7 +651,6 @@ class Store {
 
       // const amount = (parseFloat(_amount) + (parseFloat(_amount) * 0.1)).toString();
       // console.log(amount);
-      // const amount = await this._getBurnAmount(pool, amounts);
       let amount = _amount;
 
       const amountsBN = amounts.map((amount, index) => {
@@ -669,16 +668,12 @@ class Store {
         return amountToSend
       })
 
-      /*
+     let assets = 0;
       // determine if single sided removal or not
       for (const amount of amountsBN) {
         if (parseFloat(amount) !== 0)
           assets++;
       }
-      */
-
-      // if (assets > 1 && assets < pool.assets.length)
-        // amount = (parseFloat(_amount) + (parseFloat(_amount) * 0.1)).toString();
 
       let amountToSend = web3.utils.toWei(amount, "ether")
       if (pool.decimals !== 18) {
@@ -693,6 +688,7 @@ class Store {
       await this._checkApproval2({erc20address:pool.address, decimals:18}, account, amountToSend, pool.liquidityAddress)
 
 
+      // difference between caculated burn and max_burn
 
       this._callRemoveLiquidity(web3, account, pool, amountToSend, amountsBN, (err, a) => {
         if(err) {
@@ -1040,9 +1036,9 @@ class Store {
       }
 
       if (amountToSend === '-1')
-        emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, symbol: 'pool'})
+        emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, symbol: 'pool', slippage})
       else
-        emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, symbol: pool.assets[index].symbol})
+        emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, symbol: pool.assets[index].symbol, slippage})
 
       emitter.emit(SLIPPAGE_INFO_RETURNED, {
         slippagePcent: typeof slippage !== 'undefined' ? slippage * 100 : slippage,
