@@ -668,13 +668,6 @@ class Store {
         return amountToSend
       })
 
-     let assets = 0;
-      // determine if single sided removal or not
-      for (const amount of amountsBN) {
-        if (parseFloat(amount) !== 0)
-          assets++;
-      }
-
       let amountToSend = web3.utils.toWei(amount, "ether")
       if (pool.decimals !== 18) {
         const decimals = new BigNumber(10)
