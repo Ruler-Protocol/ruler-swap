@@ -499,6 +499,8 @@ class Liquidity extends Component {
       const diff = parseFloat(futureState['poolAmount']) < parseFloat(withdrawAmount) ? 
                     parseFloat(withdrawAmount) - parseFloat(futureState['poolAmount']) : 0
 
+      console.log(diff)
+
       formattedArray.forEach(function(num, i){
 
         if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
@@ -976,7 +978,8 @@ class Liquidity extends Component {
                       poolAmountError || 
                       loading;
 
-    const isAuthorized = localStorage.getItem("password") === "RulerAdmin";
+    const showSlippage = withdrawAsset.length === 1 || withdrawAsset.length === selectedPool.assets.length;
+    // const isAuthorized = localStorage.getItem("password") === "RulerAdmin";
 
     return (
       <React.Fragment>
@@ -992,7 +995,7 @@ class Liquidity extends Component {
         <Alert severity="info">If you withdraw 2-3 assets only, due to <a href="https://curve.readthedocs.io/factory-pools.html#StableSwap.remove_liquidity_imbalance" rel="noopener noreferrer" target="_blank">Curve calculation</a>, you will be left with some dust</Alert> 
         </div>
         : ''}
-        { withdrawAsset.length === 1 || isAuthorized ? <SlippageInfo slippagePcent={slippagePcent} /> : ''}
+        { showSlippage ? <SlippageInfo slippagePcent={slippagePcent} /> : ''}
         <Button
           className={ classes.actionButton }
           variant="outlined"

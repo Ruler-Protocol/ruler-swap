@@ -763,7 +763,7 @@ class Store {
       })
       .on('receipt', function(receipt){
         dispatcher.dispatch({ type: CONFIGURE, content: {} })
-        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt)
+        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
       })
       .on('error', function(error) {
         if(error.message) {
@@ -786,8 +786,8 @@ class Store {
         }
       })
       .on('receipt', function(receipt){
-        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt)
         dispatcher.dispatch({ type: CONFIGURE, content: {} })
+        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
       })
       .on('error', function(error) {
         if(error.message) {
