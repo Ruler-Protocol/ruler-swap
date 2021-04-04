@@ -499,8 +499,6 @@ class Liquidity extends Component {
       const diff = parseFloat(futureState['poolAmount']) < parseFloat(withdrawAmount) ? 
                     parseFloat(withdrawAmount) - parseFloat(futureState['poolAmount']) : 0
 
-      console.log(diff)
-
       formattedArray.forEach(function(num, i){
 
         if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
@@ -1090,68 +1088,6 @@ class Liquidity extends Component {
 
     // notify that pool has changed
     dispatcher.dispatch({ type: CHANGE_SELECTED_POOL, content: { pool: selectedPool } })
-
-    // If an url fragment was used to auto-select a pool, remove that
-    // fragment when we change pool to revert to the naked /liquidity url.
-    /*
-    if (this.props.history.location.hash !== '') {
-      this.props.history.replace('/liquidity');
-    }
-    */
-  }
-
-  // determine if user has sufficient balance for withdrawals
-  determineSufficientWithdrawBalance = (symbol, balance) => {
-
-    const { selectedPool } = this.state;
-
-    let futureState = {
-      ...this.state,
-      [`${symbol}Amount`]: balance,
-    }
-
-    let total = 0;
-
-    let amounts = [];
-
-    // get sum of input amounts
-    selectedPool.assets.forEach((asset) => {
-
-      const val = futureState[`${asset.symbol}Amount`];
-
-      if (!isNaN(val))
-        total += parseFloat(val)
-
-      amounts.push(!isNaN(val) ? val : '0')
-
-    });
-
-    // set the pool amount input to the total
-    futureState["poolAmount"] = total.toString();
-    
-    // check if the user has input too much
-    if (parseFloat(total) > parseFloat(selectedPool.balance))
-      futureState["poolAmountError"] = true
-    else 
-      futureState["poolAmountError"] = false
-
-    // set errors if the sum is larger than the amount of LP tokens
-    if (parseFloat(total) > parseFloat(selectedPool.balance)) 
-      selectedPool.assets.forEach((asset) => {
-        futureState[`${asset.symbol}AmountError`] = true
-      });
-    else 
-      selectedPool.assets.forEach((asset) => {
-        futureState[`${asset.symbol}AmountError`] = false 
-      });
-
-
-    if (amounts.filter(value => value !== '0').length === 1)
-      // get slippage info
-      dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts, burn: selectedPool.balance}})
-
-    // update state
-    this.setState(futureState);
 
   }
 
