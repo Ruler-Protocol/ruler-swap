@@ -499,6 +499,7 @@ class Liquidity extends Component {
       const diff = parseFloat(futureState['poolAmount']) < parseFloat(withdrawAmount) ? 
                     parseFloat(withdrawAmount) - parseFloat(futureState['poolAmount']) : 0
 
+              
       formattedArray.forEach(function(num, i){
 
         if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
@@ -508,7 +509,7 @@ class Liquidity extends Component {
           let receive;
           // how much of token i is to be received
           // scale down by % difference between _max_burn and calculated burn 
-          if (diff > 0)
+          if (diff > 0 && withdrawAsset.length !== 1 && withdrawAsset.length !== selectedPool.assets.length)
             receive = (parseFloat(withdrawAmount) * percent) - (parseFloat(withdrawAmount) * slippage)
           else
             receive = parseFloat(withdrawAmount) * percent

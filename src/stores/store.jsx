@@ -1013,16 +1013,38 @@ class Store {
       const index = amountsBN.findIndex(asset => parseInt(asset) !== 0);
       if (index === -1) return;
 
-      const [receiveAmountBn, virtPriceBn] = await Promise.all([
-        zapContract.methods.calc_token_amount(pool.address, amountsBN, false).call(),
-        poolContract.methods.get_virtual_price().call(),
-      ])
 
-      const receiveAmount = bnToFixed(receiveAmountBn, 18)
+      let assets = 0;
+
+      // determine if single sided removal or not
+      for (const amount of amountsBN) {
+        if (parseFloat(amount) !== 0)
+          assets++;
+      }
+
+      let receiveAmountBn, virtPriceBn
+      let decimals = 18
+
+      if (assets > 1) { 
+        [receiveAmountBn, virtPriceBn] = await Promise.all([
+          zapContract.methods.calc_token_amount(pool.address, amountsBN, false).call(),
+          poolContract.methods.get_virtual_price().call(),
+        ])
+      } else if(amountToSend !== '-1' && assets === 1){ 
+        [receiveAmountBn, virtPriceBn] = await Promise.all([
+          zapContract.methods.calc_withdraw_one_coin(pool.address, amountToSend, index).call(),
+          poolContract.methods.get_virtual_price().call(),
+        ])
+        // update decimals for receive amount calculation
+        decimals = pool.assets[index].decimals;
+      }
+
+      const receiveAmount = bnToFixed(receiveAmountBn, decimals)
+      const virtPrice = bnToFixed(virtPriceBn, 18)
       let slippage;
 
       if (Number(receiveAmount)) {
-        const virtualValue = multiplyBnToFixed(virtPriceBn, receiveAmountBn, 18)
+        const virtualValue = parseFloat(virtPrice) * parseFloat(receiveAmount)
         const realValue = sumArray(amounts) // Assuming each component is at peg
 
         slippage = (virtualValue / realValue) - 1;
