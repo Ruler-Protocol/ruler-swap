@@ -440,6 +440,11 @@ class Liquidity extends Component {
 
       });
 
+    if (parseFloat(amount) > parseFloat(selectedPool.balance))
+      this.setState({ poolAmountError: true })
+    else 
+      this.setState({ poolAmountError: false })
+
     // amounts for slippage
     let amounts = [];
     for(let i = 0; i < selectedPool.assets.length; i++) {
