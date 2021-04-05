@@ -4,7 +4,7 @@ import {
   Typography
 } from '@material-ui/core';
 import { withRouter } from "react-router-dom";
-import { colors } from '../../theme'
+import { colors, darkTheme } from '../../theme'
 
 const styles = theme => ({
   root: {
@@ -23,7 +23,8 @@ const styles = theme => ({
     borderRadius: '10px',
     lineHeight: '1.2',
     background: colors.white,
-  }
+  },
+  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
 });
 
 class Disclaimer extends Component {

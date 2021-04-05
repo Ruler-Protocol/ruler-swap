@@ -11,7 +11,7 @@ import {
   PRESELECTED_POOL_RETURNED,
   SELECTED_POOL_CHANGED,
 } from '../../constants'
-import { colors } from '../../theme'
+import { colors, darkTheme } from '../../theme'
 import Loader from '../loader'
 import Store from "../../stores";
 const emitter = Store.emitter
@@ -36,7 +36,8 @@ const styles = theme => ({
   },
   balance: {
       margin: '15px 0'
-  }
+  },
+  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
 });
 
 class CurrencyReserves extends Component {

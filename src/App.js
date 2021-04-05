@@ -106,7 +106,7 @@ class App extends Component {
               flexDirection: 'column',
               minHeight: '100vh',
               alignItems: 'center',
-              background: "#f9fafb"
+              background: `${localStorage.getItem("password") === "RulerAdmin" ? "#282B31" : "#f9fafb"}`
             }}>
               <Header />
               <Disclaimer />

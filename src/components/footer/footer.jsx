@@ -5,7 +5,7 @@ import { Typography } from '@material-ui/core';
 import DescriptionIcon from '@material-ui/icons/Description';
 import GitHubIcon from '@material-ui/icons/GitHub';
 
-import { colors } from '../../theme'
+import { colors, darkTheme } from '../../theme'
 
 const styles = theme => ({
   footer: {
@@ -23,7 +23,7 @@ const styles = theme => ({
       justifyContent: 'flex-start',
     }
   },
-  link: {
+  footerLink: {
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
@@ -33,7 +33,8 @@ const styles = theme => ({
   },
   icon: {
     marginRight: "6px"
-  }
+  },
+  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
 });
 
 
@@ -49,15 +50,15 @@ class Footer extends Component {
     const { classes } = this.props;
     return (
       <div className={classes.footer}>
-        <div className={ classes.link } onClick={()=> window.open("https://app.rulerprotocol.com/", "_blank")}>
-          <img alt="" src={ require('../../assets/ruler-icon.png') } height='23px' className={ classes.icon } />
+        <div className={ classes.footerLink } onClick={()=> window.open("https://app.rulerprotocol.com/", "_blank")}>
+          <img alt="" src={ require('../../assets/Ruler-logo.png') } height='23px' className={ classes.icon } />
           <Typography variant={ 'h4'} >Ruler App</Typography>
         </div>
-        <div className={ classes.link } onClick={()=> window.open("https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry", "_blank")}>
+        <div className={ classes.footerLink } onClick={()=> window.open("https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry", "_blank")}>
           <DescriptionIcon height='15px' className={ classes.icon } />
           <Typography variant={ 'h4'} >Curve Metapool Docs</Typography>
         </div>
-        <div className={ classes.link } onClick={()=> window.open("https://github.com/curvefi/crv.finance", "_blank")}>
+        <div className={ classes.footerLink } onClick={()=> window.open("https://github.com/curvefi/crv.finance", "_blank")}>
           <GitHubIcon height='15px' className={ classes.icon } />
           <Typography variant={ 'h4'} >UI Credit</Typography>
         </div>

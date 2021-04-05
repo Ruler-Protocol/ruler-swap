@@ -10,7 +10,7 @@ import {
   Checkbox
 } from '@material-ui/core';
 import SwapVertIcon from '@material-ui/icons/SwapVert';
-import { colors } from '../../theme'
+import { colors, darkTheme } from '../../theme'
 
 import Loader from '../loader'
 import CurrencyReserves from '../currencyReserves'
@@ -45,19 +45,6 @@ const styles = theme => ({
     width: '100%',
     justifyContent: 'flex-start',
     alignItems: 'center'
-  },
-  inputContainer: {
-    display: 'flex',
-    padding: '30px',
-    borderRadius: '10px',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    margin: '40px 0px',
-    border: '1px solid '+colors.pink,
-    maxWidth: '650px',
-    minWidth: '650px',
-    background: colors.white
   },
   actionButton: {
     '&:hover': {
@@ -249,6 +236,19 @@ const styles = theme => ({
     background: 'rgba(25, 101, 233, 0.5)',
     fontSize: '12px'
   },
+  inputContainer: {
+    display: 'flex',
+    padding: '30px',
+    borderRadius: '10px',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    margin: '40px 0px',
+    border: '1px solid '+colors.pink,
+    minWidth: '650px',
+    maxWidth: '650px',
+    background: colors.white
+  },
   expired: {
     border: '1px solid '+colors.red,
     padding: '6px',
@@ -272,7 +272,8 @@ const styles = theme => ({
   },
   swapIcon: {
     cursor: 'pointer'
-  }
+  },
+  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
 });
 
 class Swap extends Component {

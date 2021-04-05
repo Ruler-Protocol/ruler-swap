@@ -23,7 +23,11 @@ export const colors = {
 	pink: "#E7C5C2",
 	darkPink: "#d4b6b4",
 	blue: "#a3c7d2",
-	light: "#EDE9E6",
+  light: "#EDE9E6",
+  rulerWhite: "#EDE9E6",
+  rulerOrange: "#C05D4F",
+  rulerDark: "#3C4655",
+  rulerDarker: "#2C313C",
 	disabled: "rgb(106 106 106 / 80%)",
 	lightGreen: "lightgreen",
 	white: "#ffffff",
@@ -63,6 +67,212 @@ const breakpoints = createBreakpoints({
     xl: 1800
   }
 })
+
+export const darkTheme = {
+  inputContainer: {
+    display: 'flex',
+    padding: '30px',
+    borderRadius: '4px',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    margin: '40px 0px',
+    border: '1px solid '+colors.rulerDark,
+    maxWidth: '650px',
+    minWidth: '650px',
+    background: colors.rulerDark,
+    color: colors.white,
+    boxShadow: 'rgba(0, 0, 0, 0.5) -4px 9px 25px -6px'
+  },
+  actionInput: {
+    background: colors.rulerDarker,
+    border: '1px solid ' + colors.rulerDark,
+    '& input::placeholder': {
+      color: colors.white
+    },
+    '& input': {
+      color: colors.white,
+    },
+    '& .MuiOutlinedInput-root':{
+      borderRadius: '4px'
+    }
+  },
+  actionButton: {
+    '&:hover': {
+      backgroundColor: colors.rulerOrange,
+      filter: 'brightness(90%)',
+      border: '0px'
+    },
+    '&:disabled': {
+      backgroundColor: colors.disabled
+    },
+    transition: 'all ease 0.3s',
+    marginTop: '24px',
+    padding: '12px',
+    border: '0px',
+    backgroundColor: colors.rulerOrange,
+    borderRadius: '4px',
+    fontWeight: 500,
+    [breakpoints.up('md')]: {
+      padding: '15px',
+    }
+  },
+  walletAddress: {
+    padding: '8px 15px',
+    border: '1px solid rgba(255, 255, 255, 0.376)',
+    fontWeight: '500',
+    borderRadius: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+    [breakpoints.down('sm')]: {
+      display: 'flex',
+      position: 'absolute',
+      top: '90px',
+      border: "1px solid "+colors.pink,
+      background: colors.white
+    }
+  },
+  assetInfoContainer: {
+    width: '100%',
+    background: colors.rulerDarker,
+    borderRadius: '10px',
+    padding: '24px',
+  },
+  disclaimer: {
+    padding: '12px',
+    border: '0px',
+    borderRadius: '4px',
+    marginBottom: '24px',
+    fontWeight: 1,
+    background: colors.rulerDark,
+    color: colors.white,
+    boxShadow: 'rgba(0, 0, 0, 0.5) -4px 9px 25px -6px'
+  },
+  toggleHeading: {
+    flex: 1,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: '24px',
+    color: colors.whiteA1
+  },
+  infoLink: {
+    color: colors.white,
+  },
+  footer: {
+    padding: '10px',
+    display: 'flex',
+    justifyContent: 'space-evenly',
+    width: '100%',
+    background: colors.rulerDarker,
+    // borderRadius: '50px 50px 0px 0px',
+    border: 'none',
+    borderBottom: 'none',
+    marginTop: '48px',
+    flexWrap: 'wrap',
+    [breakpoints.down('xs')]: {
+      justifyContent: 'flex-start',
+    }
+  },
+  footerLink: {
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    color: colors.white,
+    '&:hover': {
+      textDecoration: 'underline'
+    },
+  },
+  toggleHeadingActive: {
+    flex: 1,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: '24px',
+    textDecoration: 'underline',
+    color: colors.white
+  },
+  assetSelectIconName: {
+    display: 'inline-block',
+    verticalAlign: 'middle',
+    color: colors.white,
+    flex: 1
+  },
+  assetSelectIcon: {
+    display: 'inline-block',
+    verticalAlign: 'middle',
+    borderRadius: '10px',
+    background: 'none',
+    height: '30px',
+    width: '30px',
+    textAlign: 'center',
+    cursor: 'pointer',
+    marginRight: '12px'
+  },
+  depositAmount: {
+    color: colors.white,
+    width: 'auto',
+    textAlign: 'right',
+    whiteSpace: 'nowrap'
+  },
+  showExpired: {
+    flex: 1,
+    paddingLeft: '12px',
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    maxHeight: '20px',
+    '& svg': {
+      transform: 'translateY(-1px)',
+      color: colors.white,
+    },
+    '& span': {
+      padding: '0',
+      marginLeft: '2px',
+      color: colors.white,
+    },
+  },
+  link: {
+    padding: '12px 0px',
+    margin: '0px 12px',
+    cursor: 'pointer',
+    color: colors.whiteA1,
+    '&:hover': {
+      paddingBottom: '9px',
+      borderBottom: "3px solid "+ colors.rulerOrange,
+    },
+  },
+  title: {
+    textTransform: 'capitalize'
+  },
+  linkActive: {
+    padding: '12px 0px',
+    margin: '0px 12px',
+    cursor: 'pointer',
+    color: colors.white,
+    paddingBottom: '9px',
+    borderBottom: "3px solid "+ colors.rulerOrange,
+  },
+  headerV2: {
+    background: '#282B31',
+    border: 'none',
+    borderTop: 'none',
+    width: '100%',
+    color: colors.white,
+    // borderRadius: '0px 0px 50px 50px',
+    display: 'flex',
+    padding: '20px 32px',
+    alignItems: 'center',
+    justifyContent: 'center',
+    [breakpoints.down('sm')]: {
+      justifyContent: 'space-between',
+      padding: '16px 24px'
+    }
+  },
+}
 
 const iswapTheme =  {
   typography: {

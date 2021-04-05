@@ -1,15 +1,16 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
-import { colors } from '../../theme'
+import { colors, darkTheme } from '../../theme'
 
 const styles = () => ({
   info: {
     paddingLeft: '12px',
   },
-  link: {
+  infoLink: {
     color: colors.text,
   },
+  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
 });
 
 const UnderlyingAssetsInfo = ({
@@ -27,7 +28,7 @@ const UnderlyingAssetsInfo = ({
   return (
     <div className={classes.info}>
       Swap between{' '}
-      <a href={`https://etherscan.io/token/${firstAsset.erc20address}`} target="_blank" rel="noopener noreferrer" className={classes.link}>{firstAsset.symbol}</a>/
+      <a href={`https://etherscan.io/token/${firstAsset.erc20address}`} target="_blank" rel="noopener noreferrer" className={classes.infoLink}>{firstAsset.symbol}</a>/
       {metaPoolAssets.map(({ symbol }) => symbol).join('/')}
     </div>
   )

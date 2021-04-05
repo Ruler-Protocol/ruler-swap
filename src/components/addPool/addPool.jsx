@@ -8,7 +8,7 @@ import {
   MenuItem,
   Button,
 } from '@material-ui/core';
-import { colors } from '../../theme'
+import { colors, darkTheme } from '../../theme'
 
 import Loader from '../loader'
 
@@ -257,6 +257,7 @@ const styles = theme => ({
       color: 'inherit',
     }
   },
+  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
 });
 
 class AddPool extends Component {

@@ -4,7 +4,7 @@ import {
   Typography
 } from '@material-ui/core';
 import { withRouter } from 'react-router-dom';
-import { colors } from '../../theme'
+import { colors, darkTheme } from '../../theme'
 
 import {
   CONNECTION_CONNECTED,
@@ -115,7 +115,8 @@ const styles = theme => ({
     [theme.breakpoints.down('sm')]: {
       display: 'none',
     }
-  }
+  },
+  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
 });
 
 class Header extends Component {

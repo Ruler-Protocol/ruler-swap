@@ -11,7 +11,7 @@ import {
   Checkbox,
   FormControlLabel
 } from '@material-ui/core';
-import { colors } from '../../theme'
+import { colors, darkTheme } from '../../theme'
 
 import Loader from '../loader'
 import SlippageInfo from '../slippageInfo'
@@ -54,19 +54,6 @@ const styles = theme => ({
     width: '100%',
     margin: '5px 0'
   },
-  inputContainer: {
-    display: 'flex',
-    padding: '30px',
-    borderRadius: '10px',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    margin: '40px 0px',
-    border: '1px solid '+colors.pink,
-    minWidth: '650px',
-    maxWidth: '650px',
-    background: colors.white
-  },
   inputCardHeading: {
     width: '100%',
     color: colors.darkGray,
@@ -83,6 +70,12 @@ const styles = theme => ({
     paddingRight: '20px',
     marginTop: '10px',
     cursor: 'pointer'
+  },
+  depositAmount: {
+    color: colors.text,
+    width: 'auto',
+    textAlign: 'right',
+    whiteSpace: 'nowrap'
   },
   assetSelectMenu: {
     padding: '15px 15px 15px 20px',
@@ -218,6 +211,19 @@ const styles = theme => ({
   space: {
     height: '24px'
   },
+  inputContainer: {
+    display: 'flex',
+    padding: '30px',
+    borderRadius: '10px',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    margin: '40px 0px',
+    border: '1px solid '+colors.pink,
+    minWidth: '650px',
+    maxWidth: '650px',
+    background: colors.white
+  },
   version1: {
     border: '1px solid '+colors.pink,
     padding: '6px',
@@ -254,6 +260,7 @@ const styles = theme => ({
   gray: {
     color: colors.darkGray
   },
+  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
 });
 
 class Liquidity extends Component {
@@ -926,7 +933,7 @@ class Liquidity extends Component {
                   height="30px"
                 />
               </div>,
-              endAdornment: <Typography variant='h5' style={{ width: 'auto', textAlign: 'right', whiteSpace: 'nowrap' }}>{selectedPool ? selectedPool.symbol : ''}</Typography>
+              endAdornment: <Typography variant='h5'className={ classes.depositAmount } >{selectedPool ? selectedPool.symbol : ''}</Typography>
             }}
           />
         </div>
