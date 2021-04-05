@@ -578,16 +578,14 @@ class Store {
       const tokenContract = new web3.eth.Contract(config.erc20ABI, pool.address)
       const totalSupply = await tokenContract.methods.totalSupply().call()
       console.log(totalSupply)
-      if(totalSupply === 0) {
+      if(parseFloat(totalSupply) === 0) {
         receive = '0'
       } else {
         return callback(ex)
       }
     }
 
-    console.log(receive);
-
-    metapoolContract.methods.add_liquidity(pool.address, amounts, 0, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+    metapoolContract.methods.add_liquidity(pool.address, amounts, receive, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
     .on('transactionHash', function(hash){
       emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
       callback(null, hash)

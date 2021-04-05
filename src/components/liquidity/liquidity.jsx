@@ -843,11 +843,22 @@ class Liquidity extends Component {
         if (this.state[asset.symbol + "AmountError"] === true) insufficientBalance = true
 
     // button disabled conditions
-    const disabled = !depositAmount || 
-                      depositAmount === '' || 
-                      parseFloat(depositAmount) === 0 ||
-                      loading ||
-                      insufficientBalance 
+    let disabled = isNaN(depositAmount) || 
+                    depositAmount === '' ||
+                    parseFloat(depositAmount) === 0 ||
+                    loading ||
+                    insufficientBalance 
+
+    // exception for seeding pools
+    if (selectedPool && !selectedPool.isPoolSeeded) {
+      let seedCheck = true
+      for (const asset of selectedPool.assets)
+        if (this.state[asset.symbol + "AmountError"] === true || 
+            parseFloat(this.state[asset.symbol + "Amount"]) === 0 || 
+            this.state[asset.symbol + "Amount"] === '') seedCheck = false 
+
+      disabled = !seedCheck;
+    }
 
     return (
       <React.Fragment>
