@@ -69,6 +69,11 @@ const breakpoints = createBreakpoints({
 })
 
 export const darkTheme = {
+  '@global': {
+    '.MuiPopover-paper h4': {
+      color: colors.text + ' !important'
+    },
+  },
   inputContainer: {
     display: 'flex',
     padding: '30px',

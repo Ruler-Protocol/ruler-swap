@@ -63,13 +63,15 @@ const styles = theme => ({
     display: 'flex',
     flexDirection: 'column',
     width: '100%',
-    marginBottom: '24px'
+    marginBottom: '40px'
   },
   balances: {
     textAlign: 'right',
     paddingRight: '20px',
-    marginTop: '10px',
-    cursor: 'pointer'
+    cursor: 'pointer',
+  },
+  actionINput: {
+    marginTop: '10px'
   },
   depositAmount: {
     color: colors.text,
@@ -176,10 +178,13 @@ const styles = theme => ({
     display: 'flex',
     alignItems: 'center'
   },
+  underPool: {
+    marginTop: '3px',
+    marginBottom: '10px'
+  },
   label: {
     flex: 1,
     paddingLeft: '12px',
-    paddingBottom: '3px',
     display: 'flex',
     alignItems: 'flex-end'
   },
@@ -621,6 +626,11 @@ class Liquidity extends Component {
       showExpired
     } = this.state
 
+    let name;
+
+    if (selectedPool)
+      name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
+
     return (
       <div className={ classes.valContainer }>
         <div className={ classes.flexy }>
@@ -651,9 +661,14 @@ class Liquidity extends Component {
             }}
           />
         </div>
-        <div className={ classes.balances }>
-          { (selectedPool ? (<Typography variant='h4' onClick={ () => { this.setAmount('pool', (selectedPool ? floatToFixed(selectedPool.balance, selectedPool.decimals) : '0')) } } className={ classes.value } noWrap>{ ''+ ( selectedPool && selectedPool.balance ? floatToFixed(selectedPool.balance, 4) : '0.0000') } { selectedPool ? selectedPool.id : '' }</Typography>) : <Typography variant='h4' className={ classes.value } noWrap>Balance: -</Typography>) }
-        </div>
+          <div className={ `${classes.flexy} ${classes.underPool}` }>
+            <div className={ `${classes.label} ${classes.balances}`}>
+              <Typography variant='h4'>{name}</Typography>
+            </div>
+            <div className={` ${classes.balances}`}>
+            { (selectedPool ? (<Typography variant='h4' onClick={ () => { this.setAmount('pool', (selectedPool ? floatToFixed(selectedPool.balance, selectedPool.decimals) : '0')) } } className={ classes.value } noWrap>{ ''+ ( selectedPool && selectedPool.balance ? floatToFixed(selectedPool.balance, 4) : '0.0000') } { selectedPool ? selectedPool.id : '' }</Typography>) : <Typography variant='h4' className={ classes.value } noWrap>Balance: -</Typography>) }
+            </div>
+          </div>
       </div>
     )
   }
@@ -714,7 +729,7 @@ class Liquidity extends Component {
   }
 
   renderPoolSelectAsset = (id) => {
-    const { loading, pools, selectedPool } = this.state
+    const { loading, pools } = this.state
     const { classes } = this.props
 
     return (
@@ -727,11 +742,9 @@ class Liquidity extends Component {
         SelectProps={{
           native: false,
           renderValue: (option) => {
-            // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
-            const name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
             return (
               <div className={ classes.assetSelectIconName }>
-                <Typography variant='h4'>{`${selectedPool.symbol} - ${name}`}</Typography>
+                <Typography variant='h4'>{ option }</Typography>
               </div>
             )
           }
@@ -761,7 +774,7 @@ class Liquidity extends Component {
   }
 
   renderPoolSelect = (id) => {
-    const { loading, pools, pool, selectedPool, showExpired } = this.state
+    const { loading, pools, pool, showExpired } = this.state
     const { classes } = this.props
 
     return (
@@ -787,12 +800,9 @@ class Liquidity extends Component {
             SelectProps={{
               native: false,
               renderValue: (option) => {
-                // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
-                const name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
-                // `${option.symbol} - ${name}`
                 return (
                   <div className={ classes.assetSelectIconName }>
-                    <Typography variant='h4'>{`${selectedPool.symbol} - ${name}`}</Typography>
+                    <Typography variant='h4'>{option}</Typography>
                   </div>
                 )
               }
@@ -1061,7 +1071,7 @@ class Liquidity extends Component {
             </Typography>
           </div>
           <div className={ classes.balances }>
-            { (asset && DorW === 'deposit' ? (<Typography variant='h4' onClick={ () => { if(DorW === 'withdraw') { return false; } this.setAmount(type, (asset ? floatToFixed(asset.balance, asset.decimals) : '0')) } } className={ classes.value } noWrap>{ ''+ ( asset && asset.balance ? floatToFixed(asset.balance, 4) : '0.0000') } { asset ? asset.symbol : '' }</Typography>) : <div></div>) }
+            { (asset  ? (<Typography variant='h4' onClick={ () => { if(DorW === 'withdraw') { return false; } this.setAmount(type, (asset ? floatToFixed(asset.balance, asset.decimals) : '0')) } } className={ classes.value } noWrap>{ ''+ ( asset && asset.balance && DorW === 'deposit' ? floatToFixed(asset.balance, 4) : '') } { asset ? asset.symbol : '' }</Typography>) : <div></div>) }
           </div>
         </div>
         <div>
@@ -1270,6 +1280,8 @@ class Liquidity extends Component {
       else
         amounts.push(this.state[selectedPool.assets[i].symbol+'Amount'])
     }
+
+    console.log(amounts)
 
     if(!error) {
       this.setState({ loading: true })

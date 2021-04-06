@@ -585,7 +585,7 @@ class Store {
       }
     }
 
-    metapoolContract.methods.add_liquidity(pool.address, amounts, receive, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+    metapoolContract.methods.add_liquidity(pool.address, amounts, receive).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
     .on('transactionHash', function(hash){
       emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
       callback(null, hash)
