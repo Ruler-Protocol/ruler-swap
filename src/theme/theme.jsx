@@ -82,11 +82,12 @@ export const darkTheme = {
     minWidth: '650px',
     background: colors.rulerDark,
     color: colors.white,
-    boxShadow: 'rgba(0, 0, 0, 0.5) -4px 9px 25px -6px'
+    boxShadow: '0px 5px 18px -4px rgba(0, 0, 0, 0.35)'
   },
   actionInput: {
     background: colors.rulerDarker,
     border: '1px solid ' + colors.rulerDark,
+    borderRadius: '4px',
     '& input::placeholder': {
       color: colors.white
     },
@@ -95,6 +96,9 @@ export const darkTheme = {
     },
     '& .MuiOutlinedInput-root':{
       borderRadius: '4px'
+    },
+    '& #pool .MuiTypography-root': {
+      color: colors.white
     }
   },
   actionButton: {
@@ -147,7 +151,7 @@ export const darkTheme = {
     fontWeight: 1,
     background: colors.rulerDark,
     color: colors.white,
-    boxShadow: 'rgba(0, 0, 0, 0.5) -4px 9px 25px -6px'
+    boxShadow: '0px 5px 18px -4px rgba(0, 0, 0, 0.35)'
   },
   toggleHeading: {
     flex: 1,
@@ -193,13 +197,22 @@ export const darkTheme = {
     justifyContent: 'center',
     paddingBottom: '24px',
     textDecoration: 'underline',
-    color: colors.white
+    textDecorationColor: colors.rulerOrange,
+    color: colors.white,
   },
   assetSelectIconName: {
     display: 'inline-block',
     verticalAlign: 'middle',
     color: colors.white,
-    flex: 1
+    flex: 1,
+    '& .MuiTypography-root': {
+      color: colors.text
+    }
+  },
+  assetContainer: {
+    '& .MuiTypography-root': {
+      color: colors.white
+    }
   },
   assetSelectIcon: {
     display: 'inline-block',

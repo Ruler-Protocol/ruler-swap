@@ -611,24 +611,10 @@ class Store {
     try {
       const web3 = await this._getWeb3Provider();
 
-      const amountsBN = amounts.map((amount, index) => {
-        let amountToSend = web3.utils.toWei(amount, "ether")
-        if (pool.assets[index].decimals !== 18) {
-          const decimals = new BigNumber(10)
-            .pow(pool.assets[index].decimals)
-
-          amountToSend = new BigNumber(amount)
-            .times(decimals)
-            .toFixed(0)
-        }
-
-        return amountToSend
-      })
-
       // get the index of the asset being removed
       const zapContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress);
 
-      const receiveAmountBn = await zapContract.methods.calc_token_amount(pool.address, amountsBN, false).call();
+      const receiveAmountBn = await zapContract.methods.calc_token_amount(pool.address, amounts, false).call();
       const receiveAmount = bnToFixed(receiveAmountBn, 18);
 
       return (receiveAmount);
@@ -703,6 +689,9 @@ class Store {
     //calcualte minimum amounts ?
 
     let assets = 0;
+
+    let x = await this._getBurnAmount(pool, amountsBN)
+    console.log(amountToSend, x) 
 
     // determine if single sided removal or not
     for (const amount of amountsBN) {
