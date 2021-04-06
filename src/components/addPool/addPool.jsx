@@ -257,7 +257,7 @@ const styles = theme => ({
       color: 'inherit',
     }
   },
-  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
+  ...darkTheme
 });
 
 class AddPool extends Component {

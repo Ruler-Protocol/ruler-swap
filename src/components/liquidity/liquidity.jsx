@@ -265,7 +265,7 @@ const styles = theme => ({
   gray: {
     color: colors.darkGray
   },
-  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
+  ...darkTheme 
 });
 
 class Liquidity extends Component {

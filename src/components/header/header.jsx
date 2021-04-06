@@ -116,7 +116,7 @@ const styles = theme => ({
       display: 'none',
     }
   },
-  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
+  ...darkTheme
 });
 
 class Header extends Component {

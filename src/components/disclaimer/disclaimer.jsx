@@ -24,7 +24,7 @@ const styles = theme => ({
     lineHeight: '1.2',
     background: colors.white,
   },
-  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
+  ...darkTheme
 });
 
 class Disclaimer extends Component {

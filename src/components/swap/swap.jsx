@@ -273,7 +273,7 @@ const styles = theme => ({
   swapIcon: {
     cursor: 'pointer'
   },
-  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
+  ...darkTheme 
 });
 
 class Swap extends Component {

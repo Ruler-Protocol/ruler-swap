@@ -10,7 +10,7 @@ const styles = () => ({
   infoLink: {
     color: colors.text,
   },
-  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
+  ...darkTheme
 });
 
 const UnderlyingAssetsInfo = ({

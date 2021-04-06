@@ -34,7 +34,7 @@ const styles = theme => ({
   icon: {
     marginRight: "6px"
   },
-  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
+  ...darkTheme
 });
 
 

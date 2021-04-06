@@ -37,7 +37,7 @@ const styles = theme => ({
   balance: {
       margin: '15px 0'
   },
-  ...darkTheme && localStorage.getItem("password") === "RulerAdmin" ? {...darkTheme} : {}
+  ...darkTheme
 });
 
 class CurrencyReserves extends Component {
