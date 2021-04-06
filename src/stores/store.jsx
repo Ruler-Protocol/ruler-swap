@@ -427,9 +427,12 @@ class Store {
     try {
       const erc20Contract = new web3.eth.Contract(config.erc20ABI, pool.address)
 
+      // list of pools to exclude
       // only get RC_ & RR_ tokens, exclude RC_WBTC_25000_DAI_2021_3_31 (since it was for testing and only used for testing)
+      const exclude = ["Curve.fi Factory USD Metapool: RC_WETH_1650_DAI_2021_4_30", "Curve.fi Factory USD Metapool: RC_WBTC_25000_2021_3_31"];
+
       const name = await erc20Contract.methods.name().call();
-      if ((!name.includes('RC_') && !name.includes('RR_')) || name.includes(`RC_WBTC_25000_2021_3_31`)) return callback(null);
+      if ((!name.includes('RC_') && !name.includes('RR_')) || exclude.indexOf(name) !== -1) return callback(null);
       const symbol = await erc20Contract.methods.symbol().call();
       const decimals = parseInt(await erc20Contract.methods.decimals().call())
 
