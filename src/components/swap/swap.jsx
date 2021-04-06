@@ -500,9 +500,11 @@ class Swap extends Component {
             SelectProps={{
               native: false,
               renderValue: (option) => {
+                // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
+                const name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
                 return (
                   <div className={ classes.assetSelectIconName }>
-                    <Typography variant='h4'>{ option }</Typography>
+                    <Typography variant='h4'>{`${selectedPool.symbol} - ${name}`}</Typography>
                   </div>
                 )
               }

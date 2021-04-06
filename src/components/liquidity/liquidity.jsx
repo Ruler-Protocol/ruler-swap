@@ -714,7 +714,7 @@ class Liquidity extends Component {
   }
 
   renderPoolSelectAsset = (id) => {
-    const { loading, pools } = this.state
+    const { loading, pools, selectedPool } = this.state
     const { classes } = this.props
 
     return (
@@ -727,9 +727,11 @@ class Liquidity extends Component {
         SelectProps={{
           native: false,
           renderValue: (option) => {
+            // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
+            const name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
             return (
               <div className={ classes.assetSelectIconName }>
-                <Typography variant='h4'>{ option }</Typography>
+                <Typography variant='h4'>{`${selectedPool.symbol} - ${name}`}</Typography>
               </div>
             )
           }
@@ -759,7 +761,7 @@ class Liquidity extends Component {
   }
 
   renderPoolSelect = (id) => {
-    const { loading, pools, pool, showExpired } = this.state
+    const { loading, pools, pool, selectedPool, showExpired } = this.state
     const { classes } = this.props
 
     return (
@@ -785,9 +787,12 @@ class Liquidity extends Component {
             SelectProps={{
               native: false,
               renderValue: (option) => {
+                // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
+                const name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
+                // `${option.symbol} - ${name}`
                 return (
                   <div className={ classes.assetSelectIconName }>
-                    <Typography variant='h4'>{ option }</Typography>
+                    <Typography variant='h4'>{`${selectedPool.symbol} - ${name}`}</Typography>
                   </div>
                 )
               }
@@ -829,7 +834,7 @@ class Liquidity extends Component {
           <React.Fragment>
             <div className={ classes.poolSelectOption }>
               <div>
-                <Typography variant='h4'>{ name }</Typography>
+                <Typography variant='h4'>{ `${option.symbol} - ${name}` }</Typography>
                 { option.balance > 0 ? <Typography variant='subtitle2' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
               </div>
               {expired ? <Typography variant='h5' className={classes.expired}>expired</Typography> : <div></div>}
