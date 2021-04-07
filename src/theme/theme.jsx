@@ -79,6 +79,12 @@ export const darkTheme = {
     },
     '.MuiLinearProgress-colorPrimary': {
       background: 'none'
+    },
+    '.MuiSelect-selectMenu h4': {
+      color: colors.white + '!important'
+    },
+    '.MuiSelect-icon': {
+      color: colors.whiteA1
     }
   },
   inputContainer: {
