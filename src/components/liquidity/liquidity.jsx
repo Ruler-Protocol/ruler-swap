@@ -427,23 +427,22 @@ class Liquidity extends Component {
         withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1  
       ).map(asset => futureState[`${asset.symbol}Amount`]))
 
-    if (poolAmount)
-      formattedArray.forEach(function(num, i){
+    formattedArray.forEach(function(num, i){
 
-        if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
-          // percent of the pool the asset has 
-          const percent = num / total
+      if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
+        // percent of the pool the asset has 
+        const percent = num / total
 
-          // how much of token i is to be received
-          const receive = parseFloat(amount) * percent
+        // how much of token i is to be received
+        const receive = parseFloat(amount) * percent
 
-          // update state value
-          futureState[`${selectedPool.assets[i].symbol}Amount`] = receive.toString()
-        } else {
-          futureState[`${selectedPool.assets[i].symbol}Amount`] = '0'
-        }
+        // update state value
+        futureState[`${selectedPool.assets[i].symbol}Amount`] = receive.toString()
+      } else {
+        futureState[`${selectedPool.assets[i].symbol}Amount`] = '0'
+      }
 
-      });
+    });
 
     if (parseFloat(amount) > parseFloat(selectedPool.balance))
       this.setState({ poolAmountError: true })
@@ -491,14 +490,14 @@ class Liquidity extends Component {
   }
 
   getWithdrawAmountReturned = (vals) => {
-    const { withdrawAmount, symbol, slippage } = vals;
+    const { withdrawAmount, direction, slippage } = vals;
     const { selectedPool, underlyingBalances, withdrawAsset } = this.state
 
     let futureState = {
-      ...this.state
+      ...this.statdirectione
     };
 
-    if (symbol !== 'pool') {
+    if (direction === 'assets') {
       const that = this;
 
       // get the list of balances
@@ -540,9 +539,9 @@ class Liquidity extends Component {
       });
 
       this.setState(futureState);
-    } else {
+    } else if (direction === 'pool') {
       this.setState({
-        [`${symbol}Amount`]: withdrawAmount
+        'poolAmount': withdrawAmount
       })
     }
   }

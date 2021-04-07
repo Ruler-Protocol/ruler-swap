@@ -1,4 +1,5 @@
 import createBreakpoints from '@material-ui/core/styles/createBreakpoints'
+import { filter } from 'async';
 
 import WorkSansTTF from '../assets/fonts/WorkSans-VariableFont_wght.ttf';
 
@@ -73,6 +74,13 @@ export const darkTheme = {
     '.MuiPopover-paper h4': {
       color: colors.text + ' !important'
     },
+    '.MuiLinearProgress-bar': {
+      background: colors.rulerOrange,
+      filter: 'opacity(50%)'
+    },
+    '.MuiLinearProgress-colorPrimary': {
+      background: 'none'
+    }
   },
   inputContainer: {
     display: 'flex',

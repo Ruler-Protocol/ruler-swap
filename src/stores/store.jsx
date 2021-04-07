@@ -428,9 +428,9 @@ class Store {
       const erc20Contract = new web3.eth.Contract(config.erc20ABI, pool.address)
 
       // list of pools to exclude
-      // only get RC_ & RR_ tokens, exclude RC_WBTC_25000_DAI_2021_3_31 (since it was for testing and only used for testing)
       const exclude = ["Curve.fi Factory USD Metapool: RC_WETH_1650_DAI_2021_4_30", "Curve.fi Factory USD Metapool: RC_WBTC_25000_2021_3_31"];
 
+      // only get RC_ & RR_ tokens, exclude RC_WBTC_25000_DAI_2021_3_31 (since it was for testing and only used for testing)
       const name = await erc20Contract.methods.name().call();
       if ((!name.includes('RC_') && !name.includes('RR_')) || exclude.indexOf(name) !== -1) return callback(null);
       const symbol = await erc20Contract.methods.symbol().call();
@@ -980,8 +980,7 @@ class Store {
       const { pool, amounts, poolAmount } = payload.content
       const web3 = await this._getWeb3Provider()
 
-      const amountToSend = poolAmount && !isNaN(poolAmount) ? web3.utils.toWei(poolAmount, "ether") : '-1'
-
+      // convert amounts array into BN amounts array
       const amountsBN = amounts.map((amount, index) => {
         let amountToSend = web3.utils.toWei(amount, "ether")
         if (pool.assets[index].decimals !== 18) {
@@ -1012,6 +1011,14 @@ class Store {
           assets++;
       }
 
+      // get amount to send and get the direction (recipient) of the amount received 
+      let amountToSend = poolAmount && !isNaN(poolAmount) ? web3.utils.toWei(poolAmount, "ether") : ''
+      const direction = amountToSend === '' ? 'pool' : 'assets'
+
+      // update amountToSend to be the single asset typed in
+      if (assets === 1)
+        amountToSend = web3.utils.toWei(amounts[index], "ether")
+
       let receiveAmountBn, virtPriceBn
       let decimals = 18
 
@@ -1020,7 +1027,7 @@ class Store {
           zapContract.methods.calc_token_amount(pool.address, amountsBN, false).call(),
           poolContract.methods.get_virtual_price().call(),
         ])
-      } else if(amountToSend !== '-1' && assets === 1){ 
+      } else if(assets === 1 && amountToSend){ 
         [receiveAmountBn, virtPriceBn] = await Promise.all([
           zapContract.methods.calc_withdraw_one_coin(pool.address, amountToSend, index).call(),
           poolContract.methods.get_virtual_price().call(),
@@ -1040,10 +1047,7 @@ class Store {
         slippage = (virtualValue / realValue) - 1;
       }
 
-      if (amountToSend === '-1')
-        emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, symbol: 'pool', slippage})
-      else
-        emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, symbol: pool.assets[index].symbol, slippage})
+      emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, direction, slippage})
 
       emitter.emit(SLIPPAGE_INFO_RETURNED, {
         slippagePcent: typeof slippage !== 'undefined' ? slippage * 100 : slippage,
