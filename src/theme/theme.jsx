@@ -1,5 +1,4 @@
 import createBreakpoints from '@material-ui/core/styles/createBreakpoints'
-import { filter } from 'async';
 
 import WorkSansTTF from '../assets/fonts/WorkSans-VariableFont_wght.ttf';
 

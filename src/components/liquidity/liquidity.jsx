@@ -452,7 +452,7 @@ class Liquidity extends Component {
     // amounts for slippage
     let amounts = [];
     for(let i = 0; i < selectedPool.assets.length; i++) {
-      if (!futureState[selectedPool.assets[i].symbol+'Amount'] || 
+      if (isNaN(futureState[selectedPool.assets[i].symbol+'Amount']) || 
            futureState[selectedPool.assets[i].symbol+'Amount'] === '')
         amounts.push('0')
       else
@@ -494,7 +494,7 @@ class Liquidity extends Component {
     const { selectedPool, underlyingBalances, withdrawAsset } = this.state
 
     let futureState = {
-      ...this.statdirectione
+      ...this.state
     };
 
     if (direction === 'assets') {
