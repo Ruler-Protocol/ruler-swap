@@ -875,15 +875,25 @@ class Liquidity extends Component {
                     loading ||
                     insufficientBalance 
 
+    disabled = false;
     // exception for seeding pools
     if (selectedPool && !selectedPool.isPoolSeeded) {
-      let seedCheck = true
-      for (const asset of selectedPool.assets)
-        if (this.state[asset.symbol + "AmountError"] === true || 
-            parseFloat(this.state[asset.symbol + "Amount"]) === 0 || 
-            this.state[asset.symbol + "Amount"] === '') seedCheck = false 
+      disabled = parseFloat(this.state[selectedPool.assets[0].symbol + "Amount"]) <= 0 ||
+                  this.state[selectedPool.assets[0].symbol + "Amount"] === '' ? true : false;
+      let count = 0;
 
-      disabled = !seedCheck;
+      // 
+      for (const asset of selectedPool.assets) {
+        if (asset === selectedPool.assets[0]) continue;
+        if (parseFloat(this.state[asset.symbol + "Amount"]) > 0) count++;
+      }
+
+      // check if at least one underlying asset is being added
+      if (count >= 1) 
+        disabled = false;
+      else 
+        disabled = true;
+
     }
 
     return (
