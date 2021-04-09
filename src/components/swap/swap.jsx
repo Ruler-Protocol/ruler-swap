@@ -262,7 +262,8 @@ const styles = theme => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '100%'
+    width: '100%',
+    padding: '8px 0 '
   },
   swapIconContainer: {
     display: 'flex',
@@ -545,7 +546,7 @@ class Swap extends Component {
         <MenuItem key={option.name} value={option.name} className={ classes.assetSelectMenu }>
           <div className={ classes.poolSelectOption }>
             <div>
-              <Typography variant='h4'>{ name }</Typography>
+              <Typography variant='h4'>{ `${option.symbol} - ${name}` }</Typography>
               { option.balance > 0 ? <Typography variant='subtitle2' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
             </div>
             { expired ? <Typography variant='h5' className={classes.expired}>expired</Typography> : <div></div>}

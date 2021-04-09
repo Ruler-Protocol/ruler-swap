@@ -259,8 +259,7 @@ const styles = theme => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    minWidth: '300px',
-    padding: '12px 12px'
+    padding: '8px 0 '
   },
   gray: {
     color: colors.darkGray
@@ -863,38 +862,36 @@ class Liquidity extends Component {
 
     let insufficientBalance = false;
 
-    // check if user has input more than their token balance
-    if (selectedPool)
-      for (const asset of selectedPool.assets)
-        if (this.state[asset.symbol + "AmountError"] === true) insufficientBalance = true
 
     // button disabled conditions
     let disabled = isNaN(depositAmount) || 
                     depositAmount === '' ||
                     parseFloat(depositAmount) === 0 ||
-                    loading ||
-                    insufficientBalance 
+                    loading
 
-    disabled = false;
     // exception for seeding pools
     if (selectedPool && !selectedPool.isPoolSeeded) {
       disabled = parseFloat(this.state[selectedPool.assets[0].symbol + "Amount"]) <= 0 ||
                   this.state[selectedPool.assets[0].symbol + "Amount"] === '' ? true : false;
+
       let count = 0;
 
-      // 
+      // get number of assets being input
       for (const asset of selectedPool.assets) {
         if (asset === selectedPool.assets[0]) continue;
-        if (parseFloat(this.state[asset.symbol + "Amount"]) > 0) count++;
+        if (parseFloat(this.state[asset.symbol + "Amount"]) > 0 && !this.state[asset.symbol + "AmountError"]) count++;
       }
 
       // check if at least one underlying asset is being added
-      if (count >= 1) 
-        disabled = false;
-      else 
-        disabled = true;
-
+      disabled = count >= 1 ? false : true;
     }
+
+    // check if user has input more than their token balance
+    if (selectedPool)
+      for (const asset of selectedPool.assets)
+        if (this.state[asset.symbol + "AmountError"] === true) insufficientBalance = true
+
+    disabled = disabled || insufficientBalance
 
     return (
       <React.Fragment>
