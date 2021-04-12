@@ -256,6 +256,13 @@ class Store {
     }
 
     const web3 = await this._getWeb3Provider()
+    
+    if (web3.currentProvider && web3.currentProvider.networkVersion !== "1") {
+      // emitter.emit(ERROR, ex)
+      emitter.emit(SNACKBAR_ERROR, "You are on an unsupported network. Please switch to Mainnet")
+      return;
+    }
+
     const pools = (await this._getPoolsV2(web3)) || [];
 
     async.map(pools, (pool, callback) => {
