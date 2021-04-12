@@ -324,7 +324,6 @@ class Swap extends Component {
 
   configureReturned = () => {
     const pools = store.getStore('pools')
-
     const selectedPool = store.getStore('selectedPool') 
 
     this.setState({
@@ -332,8 +331,6 @@ class Swap extends Component {
       pools: pools,
       pool: selectedPool ? selectedPool.id : '',
       selectedPool: selectedPool,
-      fromAsset: selectedPool && selectedPool.assets.length > 0 ? selectedPool.assets[0].symbol : '',
-      toAsset: selectedPool && selectedPool.assets.length > 0 ? selectedPool.assets[1].symbol : '',
       loading: false,
     })
 
@@ -361,14 +358,15 @@ class Swap extends Component {
 
   balancesReturned = () => {
     const pools = store.getStore('pools')
+    const { fromAsset, toAsset } = this.state;
 
-   const selectedPool = store.getStore('selectedPool') 
+    const selectedPool = store.getStore('selectedPool') 
     this.setState({
       pools: pools,
       pool: selectedPool ? selectedPool.id : '',
       selectedPool: selectedPool,
-      fromAsset: selectedPool && selectedPool.assets.length > 0 ? selectedPool.assets[0].symbol : '',
-      toAsset: selectedPool && selectedPool.assets.length > 0 ? selectedPool.assets[1].symbol : '',
+      fromAsset: fromAsset ? fromAsset : selectedPool.assets[0].symbol,
+      toAsset: toAsset ? toAsset : selectedPool.assets[1].symbol,
     })
   };
 
@@ -386,10 +384,10 @@ class Swap extends Component {
   swapReturned = () => {
     this.setState({
       loading: false,
-      fromAmount: '',
-      toAmount: '',
-      receivePerSend: '',
-      sendPerReceive: '',
+      // fromAmount: '',
+      // toAmount: '',
+      // receivePerSend: '',
+      // sendPerReceive: '',
     })
   }
 
