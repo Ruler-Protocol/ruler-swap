@@ -100,7 +100,11 @@ export const darkTheme = {
     minWidth: '650px',
     background: colors.rulerDark,
     color: colors.white,
-    boxShadow: '0px 5px 18px -4px rgba(0, 0, 0, 0.35)'
+    boxShadow: '0px 5px 18px -4px rgba(0, 0, 0, 0.35)',
+    [breakpoints.down('md')]: {
+      minWidth: '95%',
+      maxWidth: '95%',
+    },
   },
   actionInput: {
     background: colors.rulerDarker,
@@ -149,10 +153,10 @@ export const darkTheme = {
     cursor: 'pointer',
     [breakpoints.down('sm')]: {
       display: 'flex',
-      position: 'absolute',
-      top: '90px',
-      border: "1px solid "+colors.pink,
-      background: colors.white
+      // position: 'absolute',
+      // top: '90px',
+      // border: "1px solid "+colors.pink,
+      // background: colors.white
     }
   },
   assetInfoContainer: {
@@ -195,7 +199,7 @@ export const darkTheme = {
     marginTop: '48px',
     flexWrap: 'wrap',
     [breakpoints.down('xs')]: {
-      justifyContent: 'flex-start',
+      flexDirection: 'column',
     }
   },
   footerLink: {
@@ -206,6 +210,9 @@ export const darkTheme = {
     '&:hover': {
       textDecoration: 'underline'
     },
+    [breakpoints.down('xs')]: {
+      margin: '10px 0'
+    }
   },
   toggleHeadingActive: {
     flex: 1,
