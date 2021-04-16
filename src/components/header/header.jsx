@@ -9,13 +9,17 @@ import { colors, darkTheme } from '../../theme'
 import {
   CONNECTION_CONNECTED,
   CONNECTION_DISCONNECTED,
+  CONFIGURE,
+  CONFIGURE_RETURNED
 } from '../../constants'
 
 import UnlockModal from '../unlock/unlockModal.jsx'
+import Loader from '../loader'
 
 import Store from "../../stores";
 const emitter = Store.emitter
 const store = Store.store
+const dispatcher = Store.dispatcher
 
 const styles = theme => ({
   root: {
@@ -45,7 +49,17 @@ const styles = theme => ({
     display: 'flex',
     alignItems: 'center',
     flex: 1,
-    cursor: 'pointer'
+    cursor: 'pointer',
+    '& img': {
+      transition: 'all ease 0.5s',
+    },
+    '& img:hover': {
+      transform: 'rotate(360deg) scale(1.1)',
+    },
+    '& img:active': {
+      transform: 'rotate(360deg) scale(0.8)',
+      zIndex: '10'
+    } 
   },
   links: {
     display: 'flex'
@@ -111,7 +125,7 @@ const styles = theme => ({
     marginLeft:'6px'
   },
   name: {
-    paddingLeft: '24px',
+    paddingLeft: '15px',
     [theme.breakpoints.down('sm')]: {
       display: 'none',
     }
@@ -126,18 +140,21 @@ class Header extends Component {
 
     this.state = {
       account: store.getStore('account'),
-      modalOpen: false
+      modalOpen: false,
+      loading: false,
     }
   }
 
   componentWillMount() {
     emitter.on(CONNECTION_CONNECTED, this.connectionConnected);
     emitter.on(CONNECTION_DISCONNECTED, this.connectionDisconnected);
+    emitter.on(CONFIGURE_RETURNED, this.configureReturned);
   }
 
   componentWillUnmount() {
     emitter.removeListener(CONNECTION_CONNECTED, this.connectionConnected);
     emitter.removeListener(CONNECTION_DISCONNECTED, this.connectionDisconnected);
+    emitter.removeListener(CONFIGURE_RETURNED, this.configureReturned);
   }
 
   connectionConnected = () => {
@@ -148,6 +165,15 @@ class Header extends Component {
     this.setState({ account: store.getStore('account') })
   }
 
+  configureReturned = () => {
+    this.setState({ loading: false })
+  }
+
+  headerClicked = () => {
+    this.setState({ loading: true })
+    dispatcher.dispatch({ type: CONFIGURE, content: {} })
+  }
+
   render() {
     const {
       classes
@@ -156,7 +182,8 @@ class Header extends Component {
 
     const {
       account,
-      modalOpen
+      modalOpen,
+      loading
     } = this.state
 
     var address = null;
@@ -170,11 +197,11 @@ class Header extends Component {
           <div className={ classes.icon }>
             <img
               alt=""
-              src={ require('../../assets/Ruler-logo.png') }
+              src={ require('../../assets/Ruler-logo-circle.png') }
               height={ '40px' }
-              onClick={ () => { this.nav('') } }
+              onClick={ this.headerClicked }
             />
-            <Typography variant={ 'h3'} className={ classes.name } onClick={ () => { this.nav('') } }>Curve for Ruler</Typography>
+            <Typography variant={ 'h3'} className={ classes.name } onClick={ this.headerClicked }>Curve for Ruler</Typography>
           </div>
           <div className={ classes.links }>
             { this.renderLink('swap') }
@@ -196,6 +223,7 @@ class Header extends Component {
           </div>
         </div>
         { modalOpen && this.renderModal() }
+        { loading && <Loader /> }
       </div>
     )
   }
@@ -217,6 +245,8 @@ class Header extends Component {
     const pool = store.getStore('selectedPool')
 
     // keep pool in url if it exists
+    if (screen === '')
+      this.props.history.push(`/`)
     if (pool && pool.address && screen !== 'add')
       this.props.history.push(`/${screen}/${pool.address}`)
     else

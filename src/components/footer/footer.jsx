@@ -51,7 +51,7 @@ class Footer extends Component {
     return (
       <div className={classes.footer}>
         <div className={ classes.footerLink } onClick={()=> window.open("https://app.rulerprotocol.com/", "_blank")}>
-          <img alt="" src={ require('../../assets/Ruler-logo.png') } height='23px' className={ classes.icon } />
+          <img alt="" src={ require('../../assets/Ruler-logo-circle.png') } height='23px' className={ classes.icon } />
           <Typography variant={ 'h4'} >Ruler App</Typography>
         </div>
         <div className={ classes.footerLink } onClick={()=> window.open("https://curve.readthedocs.io/factory-deployer.html#metapool-factory-deployer-and-registry", "_blank")}>
