@@ -42,6 +42,7 @@ export const colors = {
 	black: "black",
 	yellow: "yellow",
 	gradient: "radial-gradient(174.47% 188.91% at 1.84% 0%, rgb(192, 93, 79) 0%, blue 100%), rgb(255, 255, 255)",
+  boxShadow: '0px 5px 18px -4px rgba(0, 0, 0, 0.35)',
 	darkBrown: "rgb(92 92 92)",
   gray: "#e1e1e1",
   lightGray: "#737373",

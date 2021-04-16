@@ -7,7 +7,7 @@ import {
   MenuItem,
   Button,
   FormControlLabel,
-  Checkbox
+  Checkbox,
 } from '@material-ui/core';
 import SwapVertIcon from '@material-ui/icons/SwapVert';
 import { colors, darkTheme } from '../../theme'
@@ -81,7 +81,15 @@ const styles = theme => ({
   assetSelectMenu: {
     padding: '15px 15px 15px 20px',
     minWidth: '300px',
-    display: 'flex'
+    display: 'flex',
+    transition: 'all ease 0.5s',
+    '&.darker': {
+      background: colors.gray
+    },
+    '&:hover': {
+      paddingLeft: '25px',
+      background: colors.secondaryGray
+    }
   },
   assetSelectIcon: {
     display: 'inline-block',
@@ -167,6 +175,12 @@ const styles = theme => ({
   flexy: {
     width: '100%',
     display: 'flex'
+  },
+  flexyStretch: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
   },
   label: {
     flex: 1,
@@ -514,7 +528,7 @@ class Swap extends Component {
             className={ classes.actionInput }
             placeholder={ 'Select' }
           >
-            { pools ? pools.map((pool) => { return this.renderPoolOption(pool) }) : null }
+            { pools ? pools.map((pool, i) => { return this.renderPoolOption(pool, i) }) : null }
           </TextField>
         </div>
         <UnderlyingAssetsInfo selectedPool={selectedPool} />
@@ -522,12 +536,14 @@ class Swap extends Component {
     )
   }
 
-  renderPoolOption = (option) => {
+  renderPoolOption = (option, index) => {
     const { classes } = this.props;
     const { showExpired } = this.state;
 
     // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
     const name = option.name.substring(option.name.indexOf(":") + 2);
+		const collateral = name.split("_")[1];
+		const paired = name.split("_")[3];
 
     // get the expiry
     const expiry = name.split('_').slice(Math.max(name.split('_').length - 3, 1));
@@ -541,10 +557,14 @@ class Swap extends Component {
 
     if (!expired || showExpired)
       return (
-        <MenuItem key={option.name} value={option.name} className={ classes.assetSelectMenu }>
+        <MenuItem key={option.name} 
+                  value={option.name} 
+                  className={ `${classes.assetSelectMenu} ${index % 2 === 0 ? 'darker' : ''}` }
+        >
           <div className={ classes.poolSelectOption }>
-            <div>
-              <Typography variant='h4'>{ `${option.symbol} - ${name}` }</Typography>
+            <img style={{boxShadow: colors.boxShadow, height: '30px', marginRight: '10px', borderRadius: '100%'}} alt={collateral} src={this.getLogoForAsset({symbol: collateral})}></img>
+            <div className={ classes.flexyStretch }>
+              <Typography variant='body'>{ `${collateral} - ${paired} (${name})` }</Typography>
               { option.balance > 0 ? <Typography variant='subtitle2' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
             </div>
             { expired ? <Typography variant='h5' className={classes.expired}>expired</Typography> : <div></div>}
