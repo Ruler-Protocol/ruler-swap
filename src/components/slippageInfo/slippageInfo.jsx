@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 import { Alert } from '@material-ui/lab'
 import { withStyles } from '@material-ui/core/styles';
@@ -20,7 +20,7 @@ const SlippageInfo = ({ slippagePcent, classes }) => {
   const isPlusPricing = slippagePcent >= 0
   const isNegPricing = slippagePcent < 0
   const isHighNegPricing = slippagePcent < -0.5
-  const isVeryHighSlippage = slippagePcent < -10 || slippagePcent > 10
+  // const isVeryHighSlippage = slippagePcent < -10 || slippagePcent > 10
 
   const formattedSlippagePcent = `${isPlusPricing ? '+' : ''}${slippagePcent.toFixed(2)}%`;
 
