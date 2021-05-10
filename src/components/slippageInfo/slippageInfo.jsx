@@ -40,8 +40,6 @@ const SlippageInfo = ({ slippagePcent, classes }) => {
 
       {' '}(incl. pricing): <strong>{formattedSlippagePcent}</strong>
 
-      {isVeryHighSlippage &&
-        <Fragment><br />(Calculated assuming a value of 1 for all assets)</Fragment>}
     </Alert>
   )
 }
