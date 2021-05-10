@@ -812,7 +812,10 @@ class Store {
       const metapoolContract = new web3.eth.Contract(config.metapoolABI, pool.address)
       const amountToReceive = await metapoolContract.methods.get_dy_underlying(from.index, to.index, amountToSend).call()
 
+
       const receiveAmount = amountToReceive/10**to.decimals
+      const slippage = (parseFloat(receiveAmount) - parseFloat(amount)) / 
+                        ((parseFloat(receiveAmount) + parseFloat(amount))/2);
 
       const returnObj = {
         sendAmount: amount,
@@ -821,6 +824,9 @@ class Store {
         sendPerReceive: amount / receiveAmount,
       }
 
+      emitter.emit(SLIPPAGE_INFO_RETURNED, {
+        slippagePcent: typeof slippage !== 'undefined' ? slippage * 100 : slippage,
+      })
       emitter.emit(SWAP_AMOUNT_RETURNED, returnObj)
     } catch(ex) {
       console.log(ex)

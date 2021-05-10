@@ -15,6 +15,7 @@ import { colors, darkTheme } from '../../theme'
 import Loader from '../loader'
 import CurrencyReserves from '../currencyReserves'
 import RateInfo from '../rateInfo'
+import SlippageInfo from '../slippageInfo'
 import UnderlyingAssetsInfo from './underlyingAssetsInfo'
 import PoolSeedingCTA from '../poolSeedingCTA'
 import { floatToFixed } from '../../utils/numbers'
@@ -28,7 +29,8 @@ import {
   SWAP_AMOUNT_RETURNED,
   SWAP,
   SWAP_RETURNED,
-  CHANGE_SELECTED_POOL
+  CHANGE_SELECTED_POOL,
+  SLIPPAGE_INFO_RETURNED
 } from '../../constants'
 
 import Store from "../../stores";
@@ -314,6 +316,7 @@ class Swap extends Component {
       sendPerReceive: '',
       loading: !(pools && pools.length > 0 && pools[0].assets.length > 0),
       calculatedSwapAmount: null,
+      slippagePcent: undefined,
     }
 
     if(account && account.address) {
@@ -324,6 +327,7 @@ class Swap extends Component {
     emitter.on(ERROR, this.errorReturned);
     emitter.on(BALANCES_RETURNED, this.balancesReturned);
     emitter.on(CONFIGURE_RETURNED, this.configureReturned);
+    emitter.on(SLIPPAGE_INFO_RETURNED, this.slippageInfoReturned);
     emitter.on(SWAP_AMOUNT_RETURNED, this.swapAmountReturned);
     emitter.on(SWAP_RETURNED, this.swapReturned);
   }
@@ -334,7 +338,12 @@ class Swap extends Component {
     emitter.removeListener(CONFIGURE_RETURNED, this.configureReturned);
     emitter.removeListener(SWAP_AMOUNT_RETURNED, this.swapAmountReturned);
     emitter.removeListener(SWAP_RETURNED, this.swapReturned);
+    emitter.removeListener(SLIPPAGE_INFO_RETURNED, this.slippageInfoReturned);
   };
+
+  slippageInfoReturned = ({ slippagePcent }) => {
+    this.setState({ slippagePcent })
+  }
 
   configureReturned = () => {
     const pools = store.getStore('pools')
@@ -436,7 +445,8 @@ class Swap extends Component {
       receivePerSend,
       sendPerReceive,
       selectedPool,
-      fromAmountError
+      fromAmountError,
+      slippagePcent
     } = this.state
 
     if(!account || !account.address) {
@@ -467,6 +477,7 @@ class Swap extends Component {
                 receivePerSend={receivePerSend}
                 sendPerReceive={sendPerReceive}
               />
+              <SlippageInfo slippagePcent={slippagePcent} />
               <Button
                 className={ classes.actionButton }
                 variant="outlined"
