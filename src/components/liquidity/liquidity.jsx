@@ -471,7 +471,14 @@ class Liquidity extends Component {
         amounts.push(futureState[selectedPool.assets[i].symbol+'Amount'])
     }
 
-    dispatcher.dispatch({ type: GET_WITHDRAW_AMOUNT, content: { pool: selectedPool, amounts, poolAmount}})
+    dispatcher.dispatch({
+      type: GET_WITHDRAW_AMOUNT, 
+      content: { 
+        pool: selectedPool, 
+        amounts, poolAmount,
+        account: futureState.account
+      }
+    })
 
   }
 
@@ -494,7 +501,14 @@ class Liquidity extends Component {
       .map(({ symbol }) => futureState[`${symbol}Amount`]) // Gather balances for that pool from state
       .map((amount) => (amount === '' || isNaN(amount)) ? '0' : amount) // Sanitize
 
-    dispatcher.dispatch({ type: GET_DEPOSIT_AMOUNT, content: { pool: selectedPool, amounts }})
+    dispatcher.dispatch({ 
+      type: GET_DEPOSIT_AMOUNT, 
+      content: { 
+        pool: selectedPool, 
+        amounts, 
+        account: futureState.account
+      }
+    })
   }
 
   getDepositAmountReturned = (val) => {
@@ -1302,8 +1316,6 @@ class Liquidity extends Component {
       else
         amounts.push(this.state[selectedPool.assets[i].symbol+'Amount'])
     }
-
-    console.log(amounts)
 
     if(!error) {
       this.setState({ loading: true })

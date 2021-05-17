@@ -497,6 +497,8 @@ class AddPool extends Component {
     const { assetInfo, selectedBasePool, name, symbol, a, fee } = this.state;
     const { classes } = this.props;
 
+    if (!selectedBasePool) return;
+
     return (
       <div className={ classes.cont }>
         <Typography variant='h2' align='center' className={ classes.poolInfoHeader }>Your pool</Typography>

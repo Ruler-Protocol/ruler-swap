@@ -455,7 +455,7 @@ class Swap extends Component {
 
     const disabled =  loading || 
                       fromAmount === '' || 
-                      parseInt(fromAmount) === 0 || 
+                      parseFloat(fromAmount) === 0 || 
                       fromAmountError
 
     return (
