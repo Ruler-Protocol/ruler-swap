@@ -839,7 +839,7 @@ class Store {
 
     if (chainId === 1) {
 
-      const metapoolContract= new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress);
+      const metapoolContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress);
       amountToReceive = await metapoolContract.methods.calc_token_amount(pool.address, amounts, true).call()
 
     } else if (chainId === 56) {
@@ -1464,7 +1464,7 @@ class Store {
 
       if (assets > 1) { 
         [receiveAmountBn, virtPriceBn] = await Promise.all([
-          this._calcTokenAmount(account.address, pool.address, amountsBN, false),
+          this._calcTokenAmount(account.address, pool, amountsBN, false),
           this._getVirtualPrice(poolContract)
         ])
       } else if(assets === 1 && amountToSend){ 
