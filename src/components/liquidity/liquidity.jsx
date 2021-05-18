@@ -422,10 +422,14 @@ class Liquidity extends Component {
     const that = this;
 
     // get the list of balances
-    const formattedArray = underlyingBalances
-    .map(function(balance, i) {
-      return parseFloat(that.formatAssetBalance(underlyingBalances[i], selectedPool.assets[i].decimals))
-    })
+    let formattedArray;
+
+    if (selectedPool.chainId === 1)
+      formattedArray = underlyingBalances.map(function(balance, i) {
+        return parseFloat(that.formatAssetBalance(underlyingBalances[i], selectedPool.assets[i].decimals))
+      })
+    else if (selectedPool.chainId === 56)
+      formattedArray = [...new Array(4).fill(0)]; 
 
     // get the sum
     const total = parseFloat(sumArray(formattedArray
@@ -440,7 +444,7 @@ class Liquidity extends Component {
 
     formattedArray.forEach(function(num, i){
 
-      if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
+      if (selectedPool.chainId === 1 && withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
         // percent of the pool the asset has 
         const percent = num / total
 
@@ -464,20 +468,27 @@ class Liquidity extends Component {
     let amounts = [];
     for(let i = 0; i < selectedPool.assets.length; i++) {
       // sanitize inputs
-      if (isNaN(futureState[selectedPool.assets[i].symbol+'Amount']) || 
-           futureState[selectedPool.assets[i].symbol+'Amount'] === '' ||
-           withdrawAsset.includes(futureState[selectedPool.assets[i].symbol]))
+      if (
+        isNaN(futureState[selectedPool.assets[i].symbol+'Amount']) || 
+        futureState[selectedPool.assets[i].symbol+'Amount'] === ''
+      )
         amounts.push('0')
       else
         amounts.push(futureState[selectedPool.assets[i].symbol+'Amount'])
     }
+
+    let index;
+    if (withdrawAsset.length === 1)
+      index = selectedPool.assets.findIndex(asset => asset.symbol === withdrawAsset[0]);
 
     dispatcher.dispatch({
       type: GET_WITHDRAW_AMOUNT, 
       content: { 
         pool: selectedPool, 
         amounts, poolAmount,
-        account: futureState.account
+        account: futureState.account,
+        assets: withdrawAsset.length,
+        index,
       }
     })
 
@@ -517,7 +528,7 @@ class Liquidity extends Component {
   }
 
   getWithdrawAmountReturned = (vals) => {
-    const { withdrawAmount, direction, slippage } = vals;
+    const { withdrawAmount, direction, slippage, receiveAmounts } = vals;
     const { selectedPool, underlyingBalances, withdrawAsset } = this.state
 
     let futureState = {
@@ -525,45 +536,90 @@ class Liquidity extends Component {
     };
 
     if (direction === 'assets') {
-      const that = this;
 
-      // get the list of balances
-      const formattedArray = underlyingBalances
-      .map(function(balance, i) {
-        return parseFloat(that.formatAssetBalance(underlyingBalances[i], selectedPool.assets[i].decimals))
-      })
+      if (selectedPool.chainId === 1) {
+        const that = this;
 
-      // get the sum
-      const total = parseFloat(sumArray(formattedArray
-        .filter((asset, i) => withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1)  
-      ));
+        // get the list of balances
+        const formattedArray = underlyingBalances
+        .map(function(balance, i) {
+          return parseFloat(that.formatAssetBalance(underlyingBalances[i], selectedPool.assets[i].decimals))
+        })
 
-      // difference between caculated burn and max_burn
-      const diff = parseFloat(futureState['poolAmount']) < parseFloat(withdrawAmount) ? 
-                    parseFloat(withdrawAmount) - parseFloat(futureState['poolAmount']) : 0
+        // get the sum
+        const total = parseFloat(sumArray(formattedArray
+          .filter((asset, i) => withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1)  
+        ));
 
-              
-      formattedArray.forEach(function(num, i){
+        // difference between caculated burn and max_burn
+        const diff = parseFloat(futureState['poolAmount']) < parseFloat(withdrawAmount) ? 
+                      parseFloat(withdrawAmount) - parseFloat(futureState['poolAmount']) : 0
 
-        if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
-          // percent of the pool the asset has 
-          const percent = num / total
+                
+        formattedArray.forEach(function(num, i){
 
-          let receive;
-          // how much of token i is to be received
-          // scale down by % difference between _max_burn and calculated burn 
-          if (diff > 0 && withdrawAsset.length !== 1 && withdrawAsset.length !== selectedPool.assets.length)
-            receive = (parseFloat(withdrawAmount) * percent) - (parseFloat(withdrawAmount) * slippage)
-          else
-            receive = parseFloat(withdrawAmount) * percent
+          if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
+            // percent of the pool the asset has 
+            const percent = num / total
 
-          // update state value
-          futureState[`${selectedPool.assets[i].symbol}Amount`] = receive.toFixed(18);
+            let receive;
+            // how much of token i is to be received
+            // scale down by % difference between _max_burn and calculated burn 
+            if (diff > 0 && withdrawAsset.length !== 1 && withdrawAsset.length !== selectedPool.assets.length)
+              receive = (parseFloat(withdrawAmount) * percent) - (parseFloat(withdrawAmount) * slippage)
+            else
+              receive = parseFloat(withdrawAmount) * percent
+
+            // update state value
+            futureState[`${selectedPool.assets[i].symbol}Amount`] = receive.toFixed(18);
+          } else {
+            futureState[`${selectedPool.assets[i].symbol}Amount`] = '0';
+          }
+
+        });
+      } else if (selectedPool.chainId === 56) {
+
+        if (receiveAmounts) {
+
+          let unused = 0;
+          let largest = 0;
+          let index = 0;
+
+          receiveAmounts.forEach(function(receive, i){
+
+            if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
+
+              // keep track of largest
+              if (receive > largest) { 
+                largest = receive;
+                index = i;
+              }
+
+              // update state value
+              futureState[`${selectedPool.assets[i].symbol}Amount`] = receive;
+          
+            } else {
+              unused += parseFloat(receiveAmounts[i]);
+              futureState[`${selectedPool.assets[i].symbol}Amount`] = '0';
+            }
+
+          });
+
+          // add unused 
+          futureState[`${selectedPool.assets[index].symbol}Amount`] = parseFloat(futureState[`${selectedPool.assets[index].symbol}Amount`]) + parseFloat(unused);
+
         } else {
-          futureState[`${selectedPool.assets[i].symbol}Amount`] = '0';
+          selectedPool.assets.forEach(function(receive, i){
+            if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
+              // update state value
+              futureState[`${selectedPool.assets[i].symbol}Amount`] = withdrawAmount;
+            } else {
+              futureState[`${selectedPool.assets[i].symbol}Amount`] = '0';
+            }
+          });
         }
 
-      });
+      }
 
       this.setState(futureState);
     } else if (direction === 'pool') {
@@ -657,7 +713,7 @@ class Liquidity extends Component {
     if (selectedPool && selectedPool.chainId === 1)
       name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
     else if (selectedPool && selectedPool.chainId === 56)
-      name = selectedPool.name.substring(selectedPool.name.indexOf("RC_"), selectedPool.name.indexOf("Metapool"));
+      name = selectedPool.name.substring(selectedPool.name.indexOf("RC_"), selectedPool.name.indexOf("Metapool") - 1);
 
     return (
       <div className={ classes.valContainer }>
@@ -796,7 +852,6 @@ class Liquidity extends Component {
           <Typography variant='h4'>{ option.name }</Typography>
           { option.balance > 0 ? <Typography variant='h5' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
         </div>
-        <Typography variant='h5' className={`${ option.version === 1 ? classes.version1 : classes.version2 }`}>version { option.version }</Typography>
       </MenuItem>
     )
   }
@@ -850,14 +905,14 @@ class Liquidity extends Component {
 
   renderPoolOption = (option, index) => {
     const { classes } = this.props
-    const { showExpired, selectedPool } = this.state;
+    const { showExpired } = this.state;
 
     let name;
     // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
-    if (selectedPool && selectedPool.chainId === 1)
-      name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
-    else if (selectedPool && selectedPool.chainId === 56)
-      name = selectedPool.name.substring(selectedPool.name.indexOf("RC_"), selectedPool.name.indexOf("Metapool"));
+    if (option && option.chainId === 1)
+      name = option.name.substring(option.name.indexOf(":") + 2);
+    else if (option && option.chainId === 56)
+      name = option.name.substring(option.name.indexOf("RC_"), option.name.indexOf("Metapool") - 1);
 
 		const collateral = name.split("_")[1];
 		const paired = name.split("_")[3];
@@ -1097,7 +1152,7 @@ class Liquidity extends Component {
 
   renderAssetInput = (asset, DorW) => {
     const { classes } = this.props;
-    const { loading } = this.state;
+    const { loading, selectedPool } = this.state;
 
     let type = asset.symbol;
 
@@ -1121,7 +1176,7 @@ class Liquidity extends Component {
         <div>
           <TextField
             fullWidth
-            disabled={ loading && !amountError }
+            disabled={ (loading && !amountError) || selectedPool.chainId === 56 }
             className={ classes.actionInput }
             id={ type+"Amount" }
             value={ amount }
@@ -1137,7 +1192,7 @@ class Liquidity extends Component {
                   src={ this.getLogoForAsset(asset) }
                   height="30px"
                 />
-              </div>,
+              </div>
             }}
           />
         </div>

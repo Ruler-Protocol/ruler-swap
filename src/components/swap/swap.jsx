@@ -277,7 +277,6 @@ const styles = theme => ({
   poolSelectOption: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
     width: '100%',
     padding: '8px 0 '
   },
@@ -525,7 +524,11 @@ class Swap extends Component {
               native: false,
               renderValue: (option) => {
                 // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
-                const name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
+                let name;
+                if (selectedPool && selectedPool.chainId === 1)
+                  name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
+                else if (selectedPool && selectedPool.chainId === 56)
+                  name = selectedPool.name.substring(selectedPool.name.indexOf("RC_"), selectedPool.name.indexOf("Metapool") - 1);
                 return (
                   <div className={ classes.assetSelectIconName }>
                     <Typography variant='h4'>{`${selectedPool.symbol} - ${name}`}</Typography>
@@ -552,7 +555,12 @@ class Swap extends Component {
     const { showExpired } = this.state;
 
     // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
-    const name = option.name.substring(option.name.indexOf(":") + 2);
+    let name;
+    if (option && option.chainId === 1)
+      name = option.name.substring(option.name.indexOf(":") + 2);
+    else if (option && option.chainId === 56)
+      name = option.name.substring(option.name.indexOf("RC_"), option.name.indexOf("Metapool") - 1);
+
 		const collateral = name.split("_")[1];
 		const paired = name.split("_")[3];
 

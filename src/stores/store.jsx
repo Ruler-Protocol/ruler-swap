@@ -746,6 +746,7 @@ class Store {
             name: name,
             balance: balance.toString(),
             isPoolSeeded,
+            lpAddress,
             chainId,
             id: `${symbol}-${pool.version}`,
             assets: assets
@@ -826,8 +827,8 @@ class Store {
 
     // initialize contract
     const contract = new web3.eth.Contract(
-      chainId === 1 ? pool.liquidityABI: config.metaSwapABI,
-      chainId === 1 ? pool.liquidityAddress: pool.address
+      chainId === 1 ? pool.liquidityABI : config.metapoolABI,
+      pool.liquidityAddress
     )
 
     let amountToReceive = '';
@@ -843,6 +844,28 @@ class Store {
     }
 
     return amountToReceive;
+  }
+
+  _calcWithdrawAmount = async(address, pool, amountToSend, amountsBN, depositing) => {
+
+    const web3 = await this._getWeb3Provider();
+    const chainId = parseFloat(web3.currentProvider.networkVersion);
+    const metapoolContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress);
+
+    let amounts = '';
+
+    if (chainId === 1) {
+
+      amounts = await metapoolContract.methods.calc_token_amount(pool.address, amountsBN, depositing).call()
+
+    } else if (chainId === 56) {
+
+      amounts = await metapoolContract.methods.calculateRemoveLiquidity(address, amountToSend).call()
+
+    }
+
+    return amounts;
+
   }
 
   _calcTokenAmount = async(address, pool, amounts, depositing) => {
@@ -957,26 +980,6 @@ class Store {
     }
   }
 
-  _getBurnAmount = async (pool, amounts) => {
-    try {
-      const web3 = await this._getWeb3Provider();
-
-      // get the index of the asset being removed
-      const zapContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress);
-
-      const receiveAmountBn = await zapContract.methods.calc_token_amount(pool.address, amounts, false).call();
-      const receiveAmount = bnToFixed(receiveAmountBn, 18);
-
-      return (receiveAmount);
-
-    } catch(ex) {
-      console.log(ex)
-      emitter.emit(ERROR, ex)
-      emitter.emit(SNACKBAR_ERROR, ex)
-    }
-
-  }
-
   withdraw = async (payload) => {
     try {
       const { pool, amount: _amount, amounts } = payload.content
@@ -1012,10 +1015,10 @@ class Store {
           .toFixed(0)
       }
 
-      await this._checkApproval2({erc20address:pool.address, decimals:18}, account, amountToSend, pool.liquidityAddress)
-
-
-      // difference between caculated burn and max_burn
+      if (pool.chainId === 1)
+        await this._checkApproval2({erc20address:pool.address, decimals:18}, account, amountToSend, pool.liquidityAddress)
+      else if (pool.chainId === 56)
+        await this._checkApproval2({erc20address:pool.lpAddress, decimals:18}, account, amountToSend, pool.liquidityAddress)
 
       this._callRemoveLiquidity(web3, account, pool, amountToSend, amountsBN, (err, a) => {
         if(err) {
@@ -1034,15 +1037,20 @@ class Store {
   }
 
   _callRemoveLiquidity = async (web3, account, pool, amountToSend, amountsBN, callback) => {
-    const zapContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress)
 
-    //calcualte minimum amounts ?
+    const config = await this._getConfig();
+    const chainId = parseFloat(web3.currentProvider.networkVersion);
+
+    // initialize contract
+    const contract = new web3.eth.Contract(
+      chainId === 1 ? pool.liquidityABI : config.metapoolABI,
+      pool.liquidityAddress
+    )
+
+    // transaction deadline
+    const deadline = Math.floor(Date.now() / 1000) + 60 * 10;
 
     let assets = 0;
-
-    let x = await this._getBurnAmount(pool, amountsBN)
-    console.log(amountToSend, x) 
-
     // determine if single sided removal or not
     for (const amount of amountsBN) {
       if (parseFloat(amount) !== 0)
@@ -1055,76 +1063,146 @@ class Store {
       const index = amountsBN.findIndex(asset => parseInt(asset) !== 0);
 
       // single sided removal      
-      await zapContract.methods.remove_liquidity_one_coin(pool.address, amountToSend, index, 0, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
-      .on('transactionHash', function(hash){
-        emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
-        callback(null, hash)
-      })
-      .on('confirmation', function(confirmationNumber, receipt){
-        console.log(confirmationNumber)
-        if(confirmationNumber === 1) {
-          // emitter.emit(SNACKBAR_TRANSACTION_CONFIRMED, receipt)
+      if (chainId === 1)
+        await contract.methods.remove_liquidity_one_coin(pool.address, amountToSend, index, 0, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        .on('transactionHash', function(hash){
+          emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
+          callback(null, hash)
+        })
+        .on('confirmation', function(confirmationNumber, receipt){
+          console.log(confirmationNumber)
+          if(confirmationNumber === 1) {
+            // emitter.emit(SNACKBAR_TRANSACTION_CONFIRMED, receipt)
+            dispatcher.dispatch({ type: CONFIGURE, content: {} })
+          }
+        })
+        .on('receipt', function(receipt){
           dispatcher.dispatch({ type: CONFIGURE, content: {} })
-        }
-      })
-      .on('receipt', function(receipt){
-        dispatcher.dispatch({ type: CONFIGURE, content: {} })
-        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
-      })
-      .on('error', function(error) {
-        if(error.message) {
-          return callback(error.message)
-        }
-        callback(error)
-      })
+          emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
+        })
+        .on('error', function(error) {
+          if(error.message) {
+            return callback(error.message)
+          }
+          callback(error)
+        })
+      else if (chainId === 56)
+        await contract.methods.removeLiquidityOneToken(amountToSend, index, 0, deadline).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        .on('transactionHash', function(hash){
+          emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
+          callback(null, hash)
+        })
+        .on('confirmation', function(confirmationNumber, receipt){
+          console.log(confirmationNumber)
+          if(confirmationNumber === 1) {
+            // emitter.emit(SNACKBAR_TRANSACTION_CONFIRMED, receipt)
+            dispatcher.dispatch({ type: CONFIGURE, content: {} })
+          }
+        })
+        .on('receipt', function(receipt){
+          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+          emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
+        })
+        .on('error', function(error) {
+          if(error.message) {
+            return callback(error.message)
+          }
+          callback(error)
+        })
+      
 
     } else if (assets > 1 && assets < amountsBN.length) {
 
       // imbalanced removal
-      await zapContract.methods.remove_liquidity_imbalance(pool.address, amountsBN, amountToSend, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
-      .on('transactionHash', function(hash){
-        emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
-        callback(null, hash)
-      })
-      .on('confirmation', function(confirmationNumber, receipt){
-        if(confirmationNumber === 1) {
+      if (chainId === 1)
+        await contract.methods.remove_liquidity_imbalance(pool.address, amountsBN, amountToSend, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        .on('transactionHash', function(hash){
+          emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
+          callback(null, hash)
+        })
+        .on('confirmation', function(confirmationNumber, receipt){
+          if(confirmationNumber === 1) {
+            dispatcher.dispatch({ type: CONFIGURE, content: {} })
+          }
+        })
+        .on('receipt', function(receipt){
           dispatcher.dispatch({ type: CONFIGURE, content: {} })
-        }
-      })
-      .on('receipt', function(receipt){
-        dispatcher.dispatch({ type: CONFIGURE, content: {} })
-        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
-      })
-      .on('error', function(error) {
-        if(error.message) {
-          return callback(error.message)
-        }
-        callback(error)
-      })
+          emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
+        })
+        .on('error', function(error) {
+          if(error.message) {
+            return callback(error.message)
+          }
+          callback(error)
+        })
+      else if (chainId === 56)
+        await contract.methods.removeLiquidityImbalance(amountsBN, amountToSend, deadline).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        .on('transactionHash', function(hash){
+          emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
+          callback(null, hash)
+        })
+        .on('confirmation', function(confirmationNumber, receipt){
+          if(confirmationNumber === 1) {
+            dispatcher.dispatch({ type: CONFIGURE, content: {} })
+          }
+        })
+        .on('receipt', function(receipt){
+          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+          emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
+        })
+        .on('error', function(error) {
+          if(error.message) {
+            return callback(error.message)
+          }
+          callback(error)
+        })
 
     } else {
 
       // remove all
-      await zapContract.methods.remove_liquidity(pool.address, amountToSend, [0, 0, 0, 0]).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
-      .on('transactionHash', function(hash){
-        emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
-        callback(null, hash)
-      })
-      .on('confirmation', function(confirmationNumber, receipt){
-        if(confirmationNumber === 1) {
+      if (chainId === 1)
+        await contract.methods.remove_liquidity(pool.address, amountToSend, [0, 0, 0, 0]).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        .on('transactionHash', function(hash){
+          emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
+          callback(null, hash)
+        })
+        .on('confirmation', function(confirmationNumber, receipt){
+          if(confirmationNumber === 1) {
+            dispatcher.dispatch({ type: CONFIGURE, content: {} })
+          }
+        })
+        .on('receipt', function(receipt){
           dispatcher.dispatch({ type: CONFIGURE, content: {} })
-        }
-      })
-      .on('receipt', function(receipt){
-        dispatcher.dispatch({ type: CONFIGURE, content: {} })
-        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
-      })
-      .on('error', function(error) {
-        if(error.message) {
-          return callback(error.message)
-        }
-        callback(error)
-      })
+          emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
+        })
+        .on('error', function(error) {
+          if(error.message) {
+            return callback(error.message)
+          }
+          callback(error)
+        })
+      else if (chainId === 56)
+        await contract.methods.removeLiquidity(amountToSend, [0, 0, 0, 0], deadline).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        .on('transactionHash', function(hash){
+          emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
+          callback(null, hash)
+        })
+        .on('confirmation', function(confirmationNumber, receipt){
+          if(confirmationNumber === 1) {
+            dispatcher.dispatch({ type: CONFIGURE, content: {} })
+          }
+        })
+        .on('receipt', function(receipt){
+          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+          emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
+        })
+        .on('error', function(error) {
+          if(error.message) {
+            return callback(error.message)
+          }
+          callback(error)
+        })
+
     }
 
   }
@@ -1424,7 +1502,7 @@ class Store {
 
   getWithdrawAmount = async (payload) => {
     try {
-      const { pool, amounts, poolAmount, account } = payload.content
+      const { pool, amounts, poolAmount, account, assets, index } = payload.content
       const web3 = await this._getWeb3Provider()
       const config = await this._getConfig();
       const chainId = parseFloat(web3.currentProvider.networkVersion);
@@ -1450,33 +1528,25 @@ class Store {
       )
 
       // get the index of the asset being removed
-      const index = amountsBN.findIndex(asset => parseInt(asset) !== 0);
-      if (index === -1) return;
-
-
-      let assets = 0;
-
-      // determine if single sided removal or not
-      for (const amount of amountsBN) {
-        if (parseFloat(amount) !== 0)
-          assets++;
-      }
+      // const index = amountsBN.findIndex(asset => parseInt(asset) !== 0);
+      // if (index === -1 && chainId === 1) return;
 
       // get amount to send and get the direction (recipient) of the amount received 
       let amountToSend = poolAmount && !isNaN(poolAmount) ? web3.utils.toWei(poolAmount, "ether") : ''
       const direction = amountToSend === '' ? 'pool' : 'assets'
 
       // update amountToSend to be the single asset typed in
-      if (assets === 1)
+      if (assets === 1 && pool.chainId === 1)
         amountToSend = web3.utils.toWei(amounts[index], "ether")
 
+      if (amountToSend === '') return;
 
       let receiveAmountBn, virtPriceBn
       let decimals = 18
 
       if (assets > 1) { 
         [receiveAmountBn, virtPriceBn] = await Promise.all([
-          this._calcTokenAmount(account.address, pool, amountsBN, false),
+          this._calcWithdrawAmount(account.address, pool, amountToSend, amountsBN, false),
           this._getVirtualPrice(poolContract)
         ])
       } else if(assets === 1 && amountToSend){ 
@@ -1492,14 +1562,24 @@ class Store {
       const virtPrice = bnToFixed(virtPriceBn, 18)
       let slippage;
 
-      if (Number(receiveAmount)) {
-        const virtualValue = parseFloat(virtPrice) * parseFloat(receiveAmount)
-        const realValue = sumArray(amounts) // Assuming each component is at peg
+      let receiveAmounts, realValue, virtualValue;
 
-        slippage = (virtualValue / realValue) - 1;
+      // nrv pools return an array how much each asset will be returned
+      if (Array.isArray(receiveAmountBn)) {
+        const receiveBN = await this._calcTokenAmount(account.address, pool, receiveAmountBn, false);
+        receiveAmounts = receiveAmountBn.map((amount,index) => bnToFixed(amount, pool.assets[index].decimals));
+        realValue = sumArray(receiveAmounts);
+        virtualValue = parseFloat(virtPrice) * parseFloat(bnToFixed(receiveBN, 18));
+      } else {
+        // Assuming each component is at peg
+        realValue = sumArray(amounts) === 0 ? parseFloat(parseFloat(poolAmount)) : sumArray(amounts);
+        virtualValue = parseFloat(virtPrice) * parseFloat(receiveAmount);
       }
 
-      emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, direction, slippage})
+
+      slippage = (virtualValue / realValue) - 1;
+
+      emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, direction, slippage, receiveAmounts})
 
       emitter.emit(SLIPPAGE_INFO_RETURNED, {
         slippagePcent: typeof slippage !== 'undefined' ? slippage * 100 : slippage,

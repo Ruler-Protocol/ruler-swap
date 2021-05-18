@@ -129,7 +129,7 @@ class CurrencyReserves extends Component {
                 <div className={ classes.balance }>
                     <Typography variant='h4'>
                       { selectedPool.chainId === 1 || i === 0 ? selectedPool.assets[i].name + ' ' : '3NRV-LP '}  
-                       ({ selectedPool.chainId === 1 || i === 0 ? selectedPool.assets[i].symbol + ' ' : 'Nerve 3Pool LP Token'})
+                       ({ selectedPool.chainId === 1 || i === 0 ? selectedPool.assets[i].symbol : 'Nerve 3Pool LP Token'})
                     </Typography> 
                     { this.formatAssetBalance(underlyingBalances[i],  selectedPool.assets[i].decimals) }
                 </div>
