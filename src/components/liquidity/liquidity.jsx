@@ -270,7 +270,6 @@ const styles = theme => ({
   poolSelectOption: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
     width: '100%',
     padding: '8px 0 '
   },
@@ -423,9 +422,9 @@ class Liquidity extends Component {
     const that = this;
 
     // get the list of balances
-    const formattedArray = selectedPool.assets
-    .map(function(asset, i) {
-      return parseFloat(that.formatAssetBalance(underlyingBalances[i], asset.decimals))
+    const formattedArray = underlyingBalances
+    .map(function(balance, i) {
+      return parseFloat(that.formatAssetBalance(underlyingBalances[i], selectedPool.assets[i].decimals))
     })
 
     // get the sum
@@ -464,8 +463,10 @@ class Liquidity extends Component {
     // amounts for slippage
     let amounts = [];
     for(let i = 0; i < selectedPool.assets.length; i++) {
+      // sanitize inputs
       if (isNaN(futureState[selectedPool.assets[i].symbol+'Amount']) || 
-           futureState[selectedPool.assets[i].symbol+'Amount'] === '')
+           futureState[selectedPool.assets[i].symbol+'Amount'] === '' ||
+           withdrawAsset.includes(futureState[selectedPool.assets[i].symbol]))
         amounts.push('0')
       else
         amounts.push(futureState[selectedPool.assets[i].symbol+'Amount'])
@@ -527,9 +528,9 @@ class Liquidity extends Component {
       const that = this;
 
       // get the list of balances
-      const formattedArray = selectedPool.assets
-      .map(function(asset, i) {
-        return parseFloat(that.formatAssetBalance(underlyingBalances[i], asset.decimals))
+      const formattedArray = underlyingBalances
+      .map(function(balance, i) {
+        return parseFloat(that.formatAssetBalance(underlyingBalances[i], selectedPool.assets[i].decimals))
       })
 
       // get the sum
@@ -653,8 +654,10 @@ class Liquidity extends Component {
 
     let name;
 
-    if (selectedPool)
+    if (selectedPool && selectedPool.chainId === 1)
       name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
+    else if (selectedPool && selectedPool.chainId === 56)
+      name = selectedPool.name.substring(selectedPool.name.indexOf("RC_"), selectedPool.name.indexOf("Metapool"));
 
     return (
       <div className={ classes.valContainer }>
@@ -847,10 +850,15 @@ class Liquidity extends Component {
 
   renderPoolOption = (option, index) => {
     const { classes } = this.props
-    const { showExpired } = this.state;
+    const { showExpired, selectedPool } = this.state;
 
+    let name;
     // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
-    const name = option.name.substring(option.name.indexOf(":") + 2);
+    if (selectedPool && selectedPool.chainId === 1)
+      name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
+    else if (selectedPool && selectedPool.chainId === 56)
+      name = selectedPool.name.substring(selectedPool.name.indexOf("RC_"), selectedPool.name.indexOf("Metapool"));
+
 		const collateral = name.split("_")[1];
 		const paired = name.split("_")[3];
 
@@ -872,9 +880,9 @@ class Liquidity extends Component {
         >
           <div className={ classes.poolSelectOption }>
             <img style={{boxShadow: colors.boxShadow, height: '30px', marginRight: '10px', borderRadius: '100%'}} alt={collateral} src={this.getLogoForAsset({symbol: collateral})}></img>
-            <div className={ classes.flexyStretch }>
+            <div>
               <Typography variant='body'>{ `${collateral} - ${paired} (${name})` }</Typography>
-              { option.balance > 0 ? <Typography variant='subtitle2' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
+              { option.balance > 0 ? <Typography variant='subtitle2' className={ classes.gray }><b>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</b></Typography> : '' }
             </div>
             { expired ? <Typography variant='h5' className={classes.expired}>expired</Typography> : <div></div>}
           </div>

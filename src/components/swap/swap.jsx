@@ -574,9 +574,9 @@ class Swap extends Component {
         >
           <div className={ classes.poolSelectOption }>
             <img style={{boxShadow: colors.boxShadow, height: '30px', marginRight: '10px', borderRadius: '100%'}} alt={collateral} src={this.getLogoForAsset({symbol: collateral})}></img>
-            <div className={ classes.flexyStretch }>
+            <div>
               <Typography variant='body'>{ `${collateral} - ${paired} (${name})` }</Typography>
-              { option.balance > 0 ? <Typography variant='subtitle2' className={ classes.gray }>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</Typography> : '' }
+              { option.balance > 0 ? <Typography variant='subtitle2' className={ classes.gray }><b>Bal: { option.balance ? parseFloat(option.balance).toFixed(4) : '' }</b></Typography> : '' }
             </div>
             { expired ? <Typography variant='h5' className={classes.expired}>expired</Typography> : <div></div>}
           </div>

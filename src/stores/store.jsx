@@ -442,25 +442,25 @@ class Store {
       // get chainId
       const chainId = parseFloat(web3.currentProvider.networkVersion);
 
-      // initialize curve factory contract
-      const curveFactoryContract = new web3.eth.Contract(config.curveFactoryV2ABI, config.curveFactoryV2Address)
+      // initialize curve factory contract or swap contract
+      const contract = new web3.eth.Contract(
+        chainId === 1 ? config.curveFactoryV2ABI : config.metaSwapABI,
+        chainId === 1 ? config.curveFactoryV2Address : pool.address
+      );
 
       let balances;
 
       if (chainId === 1) {
         // get the underlying balances of each asset in the pool
-        balances = await curveFactoryContract.methods.get_underlying_balances(pool.address).call()
+        balances = await contract.methods.get_underlying_balances(pool.address).call()
+        // only keep what's needed
+        balances = balances.slice(0, pool.assets.length);
       } else if(chainId === 56) {
-        const liquidityContract = new web3.eth.Contract(config.metapoolABI, pool.liquidityAddress);
         // get the pool balances
-        balances = await Promise.all([...Array(4)].map(async (num, index) => {
-          const token = await liquidityContract.methods.tokens(index).call();
-          const tokenContract = new web3.eth.Contract(config.erc20ABI, token)
-          let balance = await tokenContract.methods.balanceOf(pool.liquidityAddress).call()
-          return balance;
+        balances = await Promise.all([...new Array(2)].map(async (num, index) => {
+          return await contract.methods.getTokenBalance(index).call();
         }));
       }
-
 
       return balances;
 
@@ -644,11 +644,12 @@ class Store {
             symbol: symbol,
             a,
             fee,
-            decimals: decimals,
+            decimals: parseFloat(decimals),
             name: name,
             balance: balance.toString(),
             isPoolSeeded,
             id: `${symbol}-${pool.version}`,
+            chainId,
             assets: assets
           })
         })
@@ -730,19 +731,6 @@ class Store {
             return emitter.emit(SNACKBAR_ERROR, err)
           }
 
-          /*
-          let liquidityAddress = ''
-          let liquidityABI = ''
-
-          if(assets[1].erc20address.toLowerCase() === '0x6B175474E89094C44Da98b954EedeAC495271d0F'.toLowerCase()) {
-            liquidityAddress = config.usdDepositerAddress
-            liquidityABI = config.usdDepositerABI
-          } else {
-            liquidityAddress = config.btcDepositerAddress
-            liquidityABI = config.btcDepositerABI
-          }
-          */
-
           const liquidityAddress = pool.liquidityAddress;
           const liquidityABI = config.metapoolABI;
 
@@ -754,10 +742,11 @@ class Store {
             symbol: symbol,
             a,
             fee,
-            decimals: decimals,
+            decimals: parseFloat(decimals),
             name: name,
             balance: balance.toString(),
             isPoolSeeded,
+            chainId,
             id: `${symbol}-${pool.version}`,
             assets: assets
           })
@@ -830,22 +819,47 @@ class Store {
 
   }
 
+  _calcWithdrawOneCoin = async(account, pool, amountToSend, index) => {
+    const web3 = await this._getWeb3Provider();
+    const chainId = parseFloat(web3.currentProvider.networkVersion);
+    const config = await this._getConfig();
+
+    // initialize contract
+    const contract = new web3.eth.Contract(
+      chainId === 1 ? pool.liquidityABI: config.metaSwapABI,
+      chainId === 1 ? pool.liquidityAddress: pool.address
+    )
+
+    let amountToReceive = '';
+
+    if (chainId === 1) {
+
+      amountToReceive = await contract.methods.calc_withdraw_one_coin(pool.address, amountToSend, index).call();
+
+    } else if (chainId === 56) {
+
+      amountToReceive = await contract.methods.calculateRemoveLiquidityOneToken(account.address, amountToSend, index).call();
+
+    }
+
+    return amountToReceive;
+  }
+
   _calcTokenAmount = async(address, pool, amounts, depositing) => {
 
     const web3 = await this._getWeb3Provider();
     const chainId = parseFloat(web3.currentProvider.networkVersion);
+    const metapoolContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress);
     
     let amountToReceive = '';
 
     if (chainId === 1) {
 
-      const metapoolContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress);
-      amountToReceive = await metapoolContract.methods.calc_token_amount(pool.address, amounts, true).call()
+      amountToReceive = await metapoolContract.methods.calc_token_amount(pool.address, amounts, depositing).call()
 
     } else if (chainId === 56) {
 
-      const metapoolContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress);
-      amountToReceive = await metapoolContract.methods.calculateTokenAmount(address, amounts, true).call()
+      amountToReceive = await metapoolContract.methods.calculateTokenAmount(address, amounts, depositing).call()
 
     }
 
@@ -1430,12 +1444,10 @@ class Store {
         return amountToSend
       })
 
-      const zapContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress)
       const poolContract = new web3.eth.Contract(
         chainId === 1 ? config.metapoolABI : config.metaSwapABI, 
         pool.address
       )
-
 
       // get the index of the asset being removed
       const index = amountsBN.findIndex(asset => parseInt(asset) !== 0);
@@ -1469,7 +1481,7 @@ class Store {
         ])
       } else if(assets === 1 && amountToSend){ 
         [receiveAmountBn, virtPriceBn] = await Promise.all([
-          zapContract.methods.calc_withdraw_one_coin(pool.address, amountToSend, index).call(),
+          this._calcWithdrawOneCoin(account, pool, amountToSend, index),
           this._getVirtualPrice(poolContract)
         ])
         // update decimals for receive amount calculation

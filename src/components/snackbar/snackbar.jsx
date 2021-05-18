@@ -167,7 +167,7 @@ class MySnackbar extends Component {
         autoHideDuration={6000}
         onClose={this.handleClose}
         message={
-          <div style={{ padding: '12px', borderLeft: '5px solid '+color, borderRadius: '4px'}}>
+          <div style={{ padding: '12px', borderLeft: '5px solid '+color, borderRadius: '4px', overflowX: 'hidden'}}>
             {icon}
             <div style={{ display: 'inline-block', verticalAlign: 'middle', maxWidth: '400px' }}>
               <Typography variant='body1' style={{ fontSize: '14px', color: color }}>{ messageType }</Typography>
