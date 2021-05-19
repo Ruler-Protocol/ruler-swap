@@ -75,10 +75,7 @@ class Store {
       pools: [],
       selectedPool: null,
       underlyingBalances: [],
-      basePools: [
-        
-        
-      ],
+      basePools: [],
       connectorsByName: {
         MetaMask: injected,
         TrustWallet: injected,
@@ -1544,6 +1541,7 @@ class Store {
       let receiveAmountBn, virtPriceBn
       let decimals = 18
 
+      // const x = await this._calcTokenAmount(account.address, pool, amountsBN, false);
       if (assets > 1) { 
         [receiveAmountBn, virtPriceBn] = await Promise.all([
           this._calcWithdrawAmount(account.address, pool, amountToSend, amountsBN, false),
@@ -1564,15 +1562,15 @@ class Store {
 
       let receiveAmounts, realValue, virtualValue;
 
-      // nrv pools return an array how much each asset will be returned
+      // nrv pools return an array of how much of each asset will be returned
       if (Array.isArray(receiveAmountBn)) {
-        const receiveBN = await this._calcTokenAmount(account.address, pool, receiveAmountBn, false);
+        const receiveBN = await this._calcTokenAmount(account.address, pool, amountsBN, false);
         receiveAmounts = receiveAmountBn.map((amount,index) => bnToFixed(amount, pool.assets[index].decimals));
         realValue = sumArray(receiveAmounts);
         virtualValue = parseFloat(virtPrice) * parseFloat(bnToFixed(receiveBN, 18));
       } else {
         // Assuming each component is at peg
-        realValue = sumArray(amounts) === 0 ? parseFloat(parseFloat(poolAmount)) : sumArray(amounts);
+        realValue = sumArray(amounts) === 0 ? parseFloat(poolAmount) : sumArray(amounts);
         virtualValue = parseFloat(virtPrice) * parseFloat(receiveAmount);
       }
 

@@ -404,8 +404,10 @@ class Liquidity extends Component {
 
   getWithdrawAmount = (newStateSlice = {}) => {
 
-    const { selectedPool, underlyingBalances } = this.state
+    const { selectedPool, underlyingBalances, activeTab } = this.state
     const { poolAmount } = newStateSlice;
+
+    if (!selectedPool || activeTab !== 'withdraw') return;
 
     let withdrawAsset;
 
@@ -474,7 +476,9 @@ class Liquidity extends Component {
       )
         amounts.push('0')
       else
-        amounts.push(futureState[selectedPool.assets[i].symbol+'Amount'])
+        selectedPool.chainId === 1 ? 
+          amounts.push(futureState[selectedPool.assets[i].symbol+'Amount']) :
+          amounts.push((parseFloat(poolAmount)/4).toString())
     }
 
     let index;
@@ -500,8 +504,9 @@ class Liquidity extends Component {
       ...newStateSlice,
     };
 
-    const { selectedPool } = futureState;
-    if (!selectedPool) return;
+    const { selectedPool, activeTab } = futureState;
+
+    if (!selectedPool || activeTab !== 'deposit') return;
 
     this.setState({
       depositAmount: '',
@@ -511,7 +516,7 @@ class Liquidity extends Component {
 
     const amounts = selectedPool.assets
       .map(({ symbol }) => futureState[`${symbol}Amount`]) // Gather balances for that pool from state
-      .map((amount) => (amount === '' || isNaN(amount)) ? '0' : amount) // Sanitize
+      .map((amount) => (amount === '' || isNaN(amount)) ? '0' : amount.toString()) // Sanitize
 
     dispatcher.dispatch({ 
       type: GET_DEPOSIT_AMOUNT, 
@@ -1114,8 +1119,11 @@ class Liquidity extends Component {
                       poolAmountError || 
                       loading;
 
-    const showSlippage = withdrawAsset.length === 1 || withdrawAsset.length === selectedPool.assets.length;
-    // const isAuthorized = localStorage.getItem("password") === "RulerAdmin";
+    let showSlippage = !isNaN(slippagePcent);
+
+    // don't show slippage for 2 - 3 assets on ETH mainnet
+    if (selectedPool.chainId === 1)
+      showSlippage = showSlippage && (withdrawAsset.length === 1 || withdrawAsset.length === selectedPool.assets.length)
 
     return (
       <React.Fragment>
@@ -1381,7 +1389,7 @@ class Liquidity extends Component {
           isNaN(this.state[selectedPool.assets[i].symbol+'Amount']))
         amounts.push('0')
       else
-        amounts.push(this.state[selectedPool.assets[i].symbol+'Amount'])
+        amounts.push(this.state[selectedPool.assets[i].symbol+'Amount'].toString())
     }
 
     if(!error) {
