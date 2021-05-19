@@ -1406,7 +1406,7 @@ class Liquidity extends Component {
       if (this.state[selectedPool.assets[i].symbol+'Amount'] === '')
         amounts.push('0')
       else
-        amounts.push(this.state[selectedPool.assets[i].symbol+'Amount'])
+        amounts.push(this.state[selectedPool.assets[i].symbol+'Amount'].toString())
     }
 
     this.setState({ loading: true })
