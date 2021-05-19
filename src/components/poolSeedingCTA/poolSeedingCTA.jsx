@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { Alert } from '@material-ui/lab'
 import { withStyles } from '@material-ui/core/styles'
 import { useHistory } from 'react-router-dom'
+import { getExplorerURL } from '../../utils/helpers'
 
 const styles = () => ({
   alert: {
@@ -16,15 +17,15 @@ const styles = () => ({
   },
 });
 
-const AssetLink = ({ erc20address, symbol, classes }) => (
-  <a href={`https://etherscan.io/token/${erc20address}`} target="_blank" rel="noopener noreferrer" className={classes.link}>{symbol}</a>
+const AssetLink = ({ erc20address, symbol, classes, pool }) => (
+  <a href={`${getExplorerURL(pool.chainId)}/token/${erc20address}`} target="_blank" rel="noopener noreferrer" className={classes.link}>{symbol}</a>
 );
 
 const DepositPageLink = ({ pool, classes }) => {
   const history = useHistory();
 
   return (
-    <span onClick={() => history.push(`/liquidity#pool=${pool.id}`)} className={classes.link}>Seed pool yourself</span>
+    <span onClick={() => history.push(`/liquidity/${pool.address}`)} className={classes.link}>Seed pool yourself</span>
   );
 };
 
@@ -44,7 +45,7 @@ const PoolSeedingCTA = ({
       This pool is still empty. It needs to be seeded with an initial deposit in order to enable swaps.
       {isDepositForm ? (
         <Fragment>
-          <br />Assuming an exchange rate of 1:1, this pool should be seeded with 50% <AssetLink {...firstAsset} classes={classes} />, and 50% {metaPoolAssets.map((asset) => <AssetLink {...asset} classes={classes} />).reduce((a, b) => [a, '+', b])}.
+          <br />Assuming an exchange rate of 1:1, this pool should be seeded with 50% <AssetLink pool={pool} {...firstAsset} classes={classes} />, and 50% {metaPoolAssets.map((asset) => <AssetLink {...asset} classes={classes} />).reduce((a, b) => [a, '+', b])}.
         </Fragment>
       ) : (
         <Fragment>

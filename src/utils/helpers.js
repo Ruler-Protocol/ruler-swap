@@ -6,14 +6,11 @@ const getExplorerURL = (chainId) => {
     } else if (chainId === 56) {
         baseURL = 'https://bscscan.com'
     }
+    
+    return baseURL;
 }
 
 export {
-  bnToFixed,
-  multiplyBnToFixed,
-  multiplyArray,
-  sumArray,
-  sumArrayBn,
-  floatToFixed,
+    getExplorerURL
 }
 

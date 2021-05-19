@@ -8,6 +8,9 @@ import {
 } from '@material-ui/core';
 
 import { colors } from "../../theme";
+import { getExplorerURL } from '../../utils/helpers'
+import Store from "../../stores";
+const store = Store.store
 
 const iconStyle = {
   fontSize: '22px',
@@ -78,9 +81,16 @@ function InfoIcon(props) {
 
 class MySnackbar extends Component {
 
-  state = {
-    open: this.props.open,
-  };
+  constructor (props) {
+    super();
+    const selectedPool = store.getStore('selectedPool');
+    this.state = {
+      open: this.props.open,
+      chainId: selectedPool ? selectedPool.chainId : 1,
+    };
+  }
+
+  
 
   handleClick = () => {
     this.setState({ open: true });
@@ -137,7 +147,7 @@ class MySnackbar extends Component {
         color = colors.blue
         messageType = "Hash"
 
-        let snackbarMessage = 'https://etherscan.io/tx/'+message;
+        let snackbarMessage = `${getExplorerURL(this.state.chainId)}/tx/${message}`;
         actions = [<Button variant="text" size="small" onClick={()=> window.open(snackbarMessage, "_blank")}>
           View
         </Button>,
