@@ -1161,6 +1161,10 @@ class Liquidity extends Component {
     // error input if user inputs more than their balance
     const amountError = this.state[type+"AmountError"] 
 
+    // input disable logic
+    const disabled = (loading && !amountError) || 
+                      (selectedPool.chainId === 56 && DorW === 'withdraw')
+
     return (
       <div className={ classes.valContainer }>
         <div className={ classes.flexy }>
@@ -1176,7 +1180,7 @@ class Liquidity extends Component {
         <div>
           <TextField
             fullWidth
-            disabled={ (loading && !amountError) || selectedPool.chainId === 56 }
+            disabled={ disabled }
             className={ classes.actionInput }
             id={ type+"Amount" }
             value={ amount }
