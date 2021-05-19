@@ -85,7 +85,7 @@ class MySnackbar extends Component {
     super();
     const selectedPool = store.getStore('selectedPool');
     this.state = {
-      open: this.props.open,
+      open: props.open,
       chainId: selectedPool ? selectedPool.chainId : 1,
     };
   }
