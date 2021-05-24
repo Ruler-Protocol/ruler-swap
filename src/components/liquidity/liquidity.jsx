@@ -485,6 +485,9 @@ class Liquidity extends Component {
     if (withdrawAsset.length === 1)
       index = selectedPool.assets.findIndex(asset => asset.symbol === withdrawAsset[0]);
 
+    // don't get amounts if there are any bad values
+    if (amounts.filter(value => isNaN(value)).length > 0) return;
+
     dispatcher.dispatch({
       type: GET_WITHDRAW_AMOUNT, 
       content: { 

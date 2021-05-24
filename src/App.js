@@ -8,6 +8,7 @@ import {
 import IpfsRouter from 'ipfs-react-router'
 
 import interestTheme from './theme';
+import { colors } from './theme'
 
 import Header from './components/header';
 import Footer from './components/footer';
@@ -95,7 +96,7 @@ class App extends Component {
               minWidth: '100vw',
               justifyContent: 'center',
               alignItems: 'center',
-              background: "#f9fafb"
+              background: colors.rulerDarker,
             }}>
               <Account />
             </div>
@@ -106,7 +107,7 @@ class App extends Component {
               flexDirection: 'column',
               minHeight: '100vh',
               alignItems: 'center',
-              background: "#282B31"
+              background: colors.rulerDarker,
             }}>
               <Header />
               <Disclaimer />
