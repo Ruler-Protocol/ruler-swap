@@ -319,9 +319,8 @@ class Store {
 
     pools.forEach(async (pool) => {
       await this._getPoolData(web3, pool, account, (err, poolData) => {
-        if (err && err !== 1) {
-          emitter.emit(ERROR, err)
-          return emitter.emit(SNACKBAR_ERROR, err)
+        if (err || !poolData) {
+          return;
         }
         let pools = store.getStore("pools");
         pools.push(poolData);

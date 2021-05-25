@@ -96,7 +96,7 @@ class App extends Component {
               minWidth: '100vw',
               justifyContent: 'center',
               alignItems: 'center',
-              background: colors.rulerGradient,
+              background: colors.rulerDarker,
             }}>
               <Account />
             </div>
@@ -107,7 +107,7 @@ class App extends Component {
               flexDirection: 'column',
               minHeight: '100vh',
               alignItems: 'center',
-              background: colors.rulerGradient,
+              background: colors.rulerDarker,
             }}>
               <Header />
               <Disclaimer />

@@ -565,6 +565,8 @@ class Swap extends Component {
         name = option.name;
     }
 
+    if (!name) console.log(option)
+
 		const collateral = name.split("_")[1];
 		const paired = name.split("_")[3];
 
