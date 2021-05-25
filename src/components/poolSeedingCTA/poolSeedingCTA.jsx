@@ -45,7 +45,7 @@ const PoolSeedingCTA = ({
       This pool is still empty. It needs to be seeded with an initial deposit in order to enable swaps.
       {isDepositForm ? (
         <Fragment>
-          <br />Assuming an exchange rate of 1:1, this pool should be seeded with 50% <AssetLink pool={pool} {...firstAsset} classes={classes} />, and 50% {metaPoolAssets.map((asset) => <AssetLink {...asset} classes={classes} />).reduce((a, b) => [a, '+', b])}.
+          <br />Assuming an exchange rate of 1:1, this pool should be seeded with 50% <AssetLink pool={pool} {...firstAsset} classes={classes} />, and 50% {metaPoolAssets.map((asset) => <AssetLink {...asset} pool={pool} classes={classes} />).reduce((a, b) => [a, '+', b])}.
         </Fragment>
       ) : (
         <Fragment>

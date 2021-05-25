@@ -167,7 +167,7 @@ class Store {
 
       if(parseFloat(ethAllowance) < parseFloat(amount)) {
 
-        await erc20Contract.methods.approve(contract, amountToSend).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        await erc20Contract.methods.approve(contract, amountToSend).send({ from: account.address })
 
         return true
       } else {
@@ -198,7 +198,7 @@ class Store {
       var amountToSend = MAX_UINT256
 
       if(parseFloat(ethAllowance) < parseFloat(amount)) {
-        await erc20Contract.methods.approve(contract, amountToSend).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        await erc20Contract.methods.approve(contract, amountToSend).send({ from: account.address })
         callback()
       } else {
         callback()
@@ -317,17 +317,19 @@ class Store {
 
     const pools = await this._getPoolsV2(web3);
 
-    async.map(pools, (pool, callback) => {
-      this._getPoolData(web3, pool, account, callback)
-    }, (err, poolData) => {
-      if(err && err !== 1) {
-        emitter.emit(ERROR, err)
-        return emitter.emit(SNACKBAR_ERROR, err)
-      }
-      poolData = poolData.filter(p => p);
-      store.setStore({ pools: poolData })
-      return emitter.emit(CONFIGURE_RETURNED)
-    })
+    pools.forEach(async (pool) => {
+      await this._getPoolData(web3, pool, account, (err, poolData) => {
+        if (err && err !== 1) {
+          emitter.emit(ERROR, err)
+          return emitter.emit(SNACKBAR_ERROR, err)
+        }
+        let pools = store.getStore("pools");
+        pools.push(poolData);
+        store.setStore({pools});
+        return emitter.emit(CONFIGURE_RETURNED)
+      });
+    });
+
   }
 
   changeSelectedPool = async (payload) => {
@@ -931,7 +933,7 @@ class Store {
     }
 
     if (chainId === 1) {
-      metapoolContract.methods.add_liquidity(pool.address, amounts, receive).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+      metapoolContract.methods.add_liquidity(pool.address, amounts, receive).send({ from: account.address })
       .on('transactionHash', function(hash){
         emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
         callback(null, hash)
@@ -954,7 +956,7 @@ class Store {
     } else if (chainId === 56) {
       // trade deadline
       const deadline = Math.floor(Date.now() / 1000) + 60 * 10;
-      metapoolContract.methods.addLiquidity(amounts, receive, deadline).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+      metapoolContract.methods.addLiquidity(amounts, receive, deadline).send({ from: account.address })
       .on('transactionHash', function(hash){
         emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
         callback(null, hash)
@@ -1061,7 +1063,7 @@ class Store {
 
       // single sided removal      
       if (chainId === 1)
-        await contract.methods.remove_liquidity_one_coin(pool.address, amountToSend, index, 0, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        await contract.methods.remove_liquidity_one_coin(pool.address, amountToSend, index, 0, account.address).send({ from: account.address })
         .on('transactionHash', function(hash){
           emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
           callback(null, hash)
@@ -1084,7 +1086,7 @@ class Store {
           callback(error)
         })
       else if (chainId === 56)
-        await contract.methods.removeLiquidityOneToken(amountToSend, index, 0, deadline).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        await contract.methods.removeLiquidityOneToken(amountToSend, index, 0, deadline).send({ from: account.address })
         .on('transactionHash', function(hash){
           emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
           callback(null, hash)
@@ -1112,7 +1114,7 @@ class Store {
 
       // imbalanced removal
       if (chainId === 1)
-        await contract.methods.remove_liquidity_imbalance(pool.address, amountsBN, amountToSend, account.address).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        await contract.methods.remove_liquidity_imbalance(pool.address, amountsBN, amountToSend, account.address).send({ from: account.address })
         .on('transactionHash', function(hash){
           emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
           callback(null, hash)
@@ -1133,7 +1135,7 @@ class Store {
           callback(error)
         })
       else if (chainId === 56)
-        await contract.methods.removeLiquidityImbalance(amountsBN, amountToSend, deadline).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        await contract.methods.removeLiquidityImbalance(amountsBN, amountToSend, deadline).send({ from: account.address })
         .on('transactionHash', function(hash){
           emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
           callback(null, hash)
@@ -1158,7 +1160,7 @@ class Store {
 
       // remove all
       if (chainId === 1)
-        await contract.methods.remove_liquidity(pool.address, amountToSend, [0, 0, 0, 0]).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        await contract.methods.remove_liquidity(pool.address, amountToSend, [0, 0, 0, 0]).send({ from: account.address })
         .on('transactionHash', function(hash){
           emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
           callback(null, hash)
@@ -1179,7 +1181,7 @@ class Store {
           callback(error)
         })
       else if (chainId === 56)
-        await contract.methods.removeLiquidity(amountToSend, [0, 0, 0, 0], deadline).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+        await contract.methods.removeLiquidity(amountToSend, [0, 0, 0, 0], deadline).send({ from: account.address })
         .on('transactionHash', function(hash){
           emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
           callback(null, hash)
@@ -1317,7 +1319,7 @@ class Store {
     )
 
     if (chainId === 1) { 
-      metapoolContract.methods.exchange_underlying(from.index, to.index, amountToSend, receive).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+      metapoolContract.methods.exchange_underlying(from.index, to.index, amountToSend, receive).send({ from: account.address })
       .on('transactionHash', function(hash){
         emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
         callback(null, hash)
@@ -1339,7 +1341,7 @@ class Store {
       })
     } else if (chainId === 56) {
       const deadline = Math.floor(Date.now() / 1000) + 60 * 10;
-      metapoolContract.methods.swapUnderlying(from.index, to.index, amountToSend, receive, deadline).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+      metapoolContract.methods.swapUnderlying(from.index, to.index, amountToSend, receive, deadline).send({ from: account.address })
       .on('transactionHash', function(hash){
         emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
         callback(null, hash)
@@ -1427,7 +1429,7 @@ class Store {
     const deployContract= new web3.eth.Contract(config.curveFactoryV2ABI, config.curveFactoryV2Address)
 
     if (chainId === 1) {
-      deployContract.methods.deploy_metapool(basePool.erc20address, name, symbol, address, a, fee).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+      deployContract.methods.deploy_metapool(basePool.erc20address, name, symbol, address, a, fee).send({ from: account.address })
       .on('transactionHash', function(hash){
         emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
         callback(null, hash)
@@ -1474,7 +1476,7 @@ class Store {
         '0',
         '0',
         basePool.erc20address, 
-      ).send({ from: account.address, gasPrice: web3.utils.toWei(await this._getGasPrice(), 'gwei') })
+      ).send({ from: account.address })
       .on('transactionHash', function(hash){
         emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
         callback(null, hash)

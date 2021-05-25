@@ -915,12 +915,16 @@ class Liquidity extends Component {
     const { classes } = this.props
     const { showExpired } = this.state;
 
-    let name;
     // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
+    let name;
     if (option && option.chainId === 1)
       name = option.name.substring(option.name.indexOf(":") + 2);
-    else if (option && option.chainId === 56)
-      name = option.name.substring(option.name.indexOf("RC_"), option.name.indexOf("Metapool") - 1);
+    else if (option && option.chainId === 56) {
+      if (option.name.indexOf("Metapool") !== -1)
+        name = option.name.substring(option.name.indexOf("RC_"), option.name.indexOf("Metapool") - 1);
+      else 
+        name = option.name;
+    }
 
 		const collateral = name.split("_")[1];
 		const paired = name.split("_")[3];
