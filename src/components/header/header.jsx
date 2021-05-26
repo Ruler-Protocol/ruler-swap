@@ -53,13 +53,26 @@ const styles = theme => ({
     '& img': {
       transition: 'all ease 0.5s',
     },
-    '& img:hover': {
-      transform: 'rotate(360deg) scale(1.1)',
+  },
+  logo: {
+    transition: 'all ease 0.5s',
+    marginRight: '20px',
+    height: '55px',
+    width: 'auto',
+    '&:hover' :{
+      transform: 'rotate(360deg) scale(1.1)'
     },
     '& img:active': {
       transform: 'rotate(360deg) scale(0.8)',
       zIndex: '10'
     } 
+  },
+  poweredBy: {
+    transform: 'translateY(3px)',
+    '& img': {
+      maxHeight: '60px',
+      width: 'auto'
+    }
   },
   links: {
     display: 'flex'
@@ -142,6 +155,7 @@ class Header extends Component {
       account: store.getStore('account'),
       modalOpen: false,
       loading: false,
+      chainId: 0
     }
   }
 
@@ -166,12 +180,39 @@ class Header extends Component {
   }
 
   configureReturned = () => {
-    this.setState({ loading: false })
+    const pool = store.getStore('selectedPool');
+    this.setState({
+      loading: false,
+      chainId: pool ? pool.chainId : 1
+    })
   }
 
   headerClicked = () => {
     this.setState({ loading: true })
     dispatcher.dispatch({ type: CONFIGURE, content: {} })
+  }
+
+  renderPoweredBy = () => {
+    const { classes } = this.props
+    const { chainId } = this.state;
+
+    if (chainId === 0) return;
+    const by = chainId === 1 ? 'curve' : 'nerve';
+    const link = chainId === 1 ? 'https://curve.fi/' : 'https://nerve.fi/';
+
+    return(
+      <a
+        href={link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={ classes.poweredBy }
+      >
+        <img
+          alt=""
+          src={ require(`../../assets/powered_by_${by}.png`) }
+        />
+      </a>
+    );
   }
 
   render() {
@@ -200,8 +241,9 @@ class Header extends Component {
               src={ require('../../assets/Ruler-logo-circle.png') }
               height={ '40px' }
               onClick={ this.headerClicked }
+              className={ classes.logo }
             />
-            <Typography variant={ 'h3'} className={ classes.name } onClick={ this.headerClicked }>Curve for Ruler</Typography>
+            {this.renderPoweredBy()}
           </div>
           <div className={ classes.links }>
             { this.renderLink('swap') }
