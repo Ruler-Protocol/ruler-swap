@@ -496,6 +496,22 @@ class Swap extends Component {
     )
   };
 
+
+  formatPoolName = (pool, showSymbol = true) => {
+
+    // format the name of the pool
+    const rcSymbol = pool.assets[0].symbol;
+    const collateral = rcSymbol.split('_')[1];
+    const paired = rcSymbol.split('_')[3]
+
+    // format message 
+    let poolName = `${collateral} - ${paired}`;
+    if (showSymbol) poolName +=  `(${rcSymbol})`;
+
+    return(poolName);
+
+  }
+
   renderPoolSelect = () => {
     const { loading, pools, pool, selectedPool, showExpired } = this.state
     const { classes } = this.props
@@ -522,20 +538,10 @@ class Swap extends Component {
             onChange={ this.onPoolSelectChange }
             SelectProps={{
               native: false,
-              renderValue: (option) => {
-                // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
-                let name;
-                if (selectedPool && selectedPool.chainId === 1)
-                  name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
-                else if (selectedPool && selectedPool.chainId === 56)
-                  name = selectedPool.name.substring(selectedPool.name.indexOf("RC_"), selectedPool.name.indexOf("Metapool") - 1);
-                // format the name of the pool
-                const rcToken = selectedPool.assets[0].symbol;
-                const collateral = rcToken.split('_')[1];
-                const paired = rcToken.split('_')[3];
+              renderValue: () => {
                 return (
                   <div className={ classes.assetSelectIconName }>
-                    <Typography variant='h4'>{collateral} - {paired} ({name})</Typography>
+                    <Typography variant='h4'>{this.formatPoolName(selectedPool)}</Typography>
                   </div>
                 )
               }
