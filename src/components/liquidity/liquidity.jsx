@@ -716,13 +716,6 @@ class Liquidity extends Component {
       showExpired
     } = this.state
 
-    let name;
-
-    if (selectedPool && selectedPool.chainId === 1)
-      name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
-    else if (selectedPool && selectedPool.chainId === 56)
-      name = selectedPool.name.substring(selectedPool.name.indexOf("RC_"), selectedPool.name.indexOf("Metapool") - 1);
-
     return (
       <div className={ classes.valContainer }>
         <div className={ classes.flexy }>
@@ -755,7 +748,7 @@ class Liquidity extends Component {
         </div>
           <div className={ `${classes.flexy} ${classes.underPool}` }>
             <div className={ `${classes.label} ${classes.balances}`}>
-              <Typography variant='h4'>{name}</Typography>
+              <Typography variant='h4'>{this.formatPoolName(selectedPool, false)}</Typography>
             </div>
             <div className={` ${classes.balances}`}>
             { (selectedPool ? (<Typography variant='h4' onClick={ () => { this.setAmount('pool', (selectedPool ? floatToFixed(selectedPool.balance, selectedPool.decimals) : '0')) } } className={ classes.value } noWrap>{ ''+ ( selectedPool && selectedPool.balance ? floatToFixed(selectedPool.balance, 4) : '0.0000') } { selectedPool ? selectedPool.id : '' }</Typography>) : <Typography variant='h4' className={ classes.value } noWrap>Balance: -</Typography>) }
@@ -864,8 +857,23 @@ class Liquidity extends Component {
     )
   }
 
+  formatPoolName = (pool, showSymbol = true) => {
+
+    // format the name of the pool
+    const rcSymbol = pool.assets[0].symbol;
+    const collateral = rcSymbol.split('_')[1];
+    const paired = rcSymbol.split('_')[3]
+
+    // format message 
+    let poolName = `${collateral} - ${paired}`;
+    if (showSymbol) poolName +=  `(${rcSymbol})`;
+
+    return(poolName);
+
+  }
+
   renderPoolSelect = (id) => {
-    const { loading, pools, pool, showExpired } = this.state
+    const { loading, pools, pool, showExpired, selectedPool } = this.state
     const { classes } = this.props
 
     return (
@@ -890,10 +898,10 @@ class Liquidity extends Component {
             onChange={ this.onPoolSelectChange }
             SelectProps={{
               native: false,
-              renderValue: (option) => {
+              renderValue: () => {
                 return (
                   <div className={ classes.assetSelectIconName }>
-                    <Typography variant='h4'>{option}</Typography>
+                    <Typography variant='h4'>{selectedPool && this.formatPoolName(selectedPool)}</Typography>
                   </div>
                 )
               }

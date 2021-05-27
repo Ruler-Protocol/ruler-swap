@@ -529,9 +529,13 @@ class Swap extends Component {
                   name = selectedPool.name.substring(selectedPool.name.indexOf(":") + 2);
                 else if (selectedPool && selectedPool.chainId === 56)
                   name = selectedPool.name.substring(selectedPool.name.indexOf("RC_"), selectedPool.name.indexOf("Metapool") - 1);
+                // format the name of the pool
+                const rcToken = selectedPool.assets[0].symbol;
+                const collateral = rcToken.split('_')[1];
+                const paired = rcToken.split('_')[3];
                 return (
                   <div className={ classes.assetSelectIconName }>
-                    <Typography variant='h4'>{`${selectedPool.symbol} - ${name}`}</Typography>
+                    <Typography variant='h4'>{collateral} - {paired} ({name})</Typography>
                   </div>
                 )
               }
