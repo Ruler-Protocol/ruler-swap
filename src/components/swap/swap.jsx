@@ -389,6 +389,7 @@ class Swap extends Component {
       selectedPool: selectedPool,
       fromAsset: fromAsset ? fromAsset : selectedPool.assets[0].symbol,
       toAsset: toAsset ? toAsset : selectedPool.assets[1].symbol,
+      loading: false
     })
   };
 
@@ -506,7 +507,7 @@ class Swap extends Component {
 
     // format message 
     let poolName = `${collateral} - ${paired}`;
-    if (showSymbol) poolName +=  `(${rcSymbol})`;
+    if (showSymbol) poolName +=  ` (${rcSymbol})`;
 
     return(poolName);
 

@@ -317,17 +317,26 @@ class Store {
 
     const pools = await this._getPoolsV2(web3);
 
+    if (!pools) return;
+
+    let dataCount = 0;
     pools.forEach(async (pool) => {
       await this._getPoolData(web3, pool, account, (err, poolData) => {
-        if ((err && err !== 1) || !poolData) {
+        if (err || !poolData) {
+          // emit configure_returned once pools are loaded
+          if (dataCount++ === pools.length - 1)  emitter.emit(CONFIGURE_RETURNED)
           return;
         }
-        let pools = store.getStore("pools");
-        pools.push(poolData);
-        store.setStore({pools});
-        return emitter.emit(CONFIGURE_RETURNED)
+
+        let loadedPools = store.getStore("pools");
+        loadedPools.push(poolData);
+        store.setStore({loadedPools});
+        
+        // emit configure_returned once pools are loaded
+        if (dataCount++ === pools.length - 1) 
+          emitter.emit(CONFIGURE_RETURNED)
       });
-    });
+    })
 
   }
 
@@ -504,9 +513,10 @@ class Store {
       // get the underlying asset balances for the selected pool
       const underlyingBalances = await this._getUnderlyingBalances(selectedPool);
 
-      store.setStore({ underlyingBalances })
+      store.setStore({ underlyingBalances });
 
-      emitter.emit(PRESELECTED_POOL_RETURNED, selectedPool)
+      emitter.emit(PRESELECTED_POOL_RETURNED, selectedPool);
+      emitter.emit(SELECTED_POOL_CHANGED, selectedPool);
 
     } catch (ex) {
       emitter.emit(ERROR, ex)
@@ -561,7 +571,10 @@ class Store {
       const exclude = ["Curve.fi Factory USD Metapool: RC_WETH_1650_DAI_2021_4_30", "Curve.fi Factory USD Metapool: RC_WBTC_25000_2021_3_31"];
       const addrBlacklist = ["0x112001947E8a5D54016D20CAc4d84779Bc48e75C"];
 
-      if (addrBlacklist.includes(pool.address)) return;
+      if (addrBlacklist.includes(pool.address)) {
+        callback(true, {});
+        return;
+      }
 
       if (chainId === 1) {
 
@@ -569,7 +582,10 @@ class Store {
 
         // only get RC_ & RR_ tokens, exclude RC_WBTC_25000_DAI_2021_3_31 (since it was for testing and only used for testing)
         const name = await erc20Contract.methods.name().call();
-        if ((!name.includes('RC_') && !name.includes('RR_')) || exclude.indexOf(name) !== -1) return callback(null);
+        if ((!name.includes('RC_') && !name.includes('RR_')) || exclude.indexOf(name) !== -1) {
+          callback(true, {});
+          return;
+        }
         const symbol = await erc20Contract.methods.symbol().call();
         const decimals = parseInt(await erc20Contract.methods.decimals().call())
 
@@ -670,7 +686,10 @@ class Store {
         // const token0 = new web3.eth.Contract(config.erc20ABI, token0Address);
         const symbol = await lpContract.methods.symbol().call();
         const name = await lpContract.methods.name().call();
-        if (!symbol.includes('RC_') && !symbol.includes('RR_')) return;
+        if (!symbol.includes('RC_') && !symbol.includes('RR_')) {
+          callback(true, {});
+          return;
+        }
 
         const decimals = await lpContract.methods.decimals().call();
         const bnDecimals = new BigNumber(10)
@@ -728,11 +747,10 @@ class Store {
             emitter.emit(ERROR, err)
             return emitter.emit(SNACKBAR_ERROR, err)
           }
-
           const liquidityAddress = pool.liquidityAddress;
           const liquidityABI = config.metapoolABI;
 
-          callback(1, {
+          callback(null, {
             version: pool.version,
             address: pool.address,
             liquidityAddress: liquidityAddress,
@@ -810,9 +828,9 @@ class Store {
     let virtualPrice = '';
 
     if (chainId === 1)
-      virtualPrice = await contract.methods.get_virtual_price().call()
+      virtualPrice = await contract.methods.get_virtual_price().call();
     else if (chainId === 56)
-      virtualPrice = await contract.methods.getVirtualPrice().call()
+      virtualPrice = await contract.methods.getVirtualPrice().call();
 
     return virtualPrice;
 
@@ -827,19 +845,23 @@ class Store {
     const contract = new web3.eth.Contract(
       chainId === 1 ? pool.liquidityABI : config.metapoolABI,
       pool.liquidityAddress
-    )
+    );
 
     let amountToReceive = '';
 
-    if (chainId === 1) {
+    if (chainId === 1) 
+      amountToReceive = await contract.methods.calc_withdraw_one_coin(
+        pool.address, 
+        amountToSend,
+        index
+      ).call();
+    else if (chainId === 56)
+      amountToReceive = await contract.methods.calculateRemoveLiquidityOneToken(
+        account.address, 
+        amountToSend, 
+        index
+      ).call();
 
-      amountToReceive = await contract.methods.calc_withdraw_one_coin(pool.address, amountToSend, index).call();
-
-    } else if (chainId === 56) {
-
-      amountToReceive = await contract.methods.calculateRemoveLiquidityOneToken(account.address, amountToSend, index).call();
-
-    }
 
     return amountToReceive;
   }
@@ -852,15 +874,17 @@ class Store {
 
     let amounts = '';
 
-    if (chainId === 1) {
-
-      amounts = await metapoolContract.methods.calc_token_amount(pool.address, amountsBN, depositing).call()
-
-    } else if (chainId === 56) {
-
-      amounts = await metapoolContract.methods.calculateRemoveLiquidity(address, amountToSend).call()
-
-    }
+    if (chainId === 1)
+      amounts = await metapoolContract.methods.calc_token_amount(
+        pool.address, 
+        amountsBN, 
+        depositing
+      ).call();
+    else if (chainId === 56)
+      amounts = await metapoolContract.methods.calculateRemoveLiquidity(
+        address, 
+        amountToSend
+      ).call();
 
     return amounts;
 
@@ -874,15 +898,18 @@ class Store {
     
     let amountToReceive = '';
 
-    if (chainId === 1) {
-
-      amountToReceive = await metapoolContract.methods.calc_token_amount(pool.address, amounts, depositing).call()
-
-    } else if (chainId === 56) {
-
-      amountToReceive = await metapoolContract.methods.calculateTokenAmount(address, amounts, depositing).call()
-
-    }
+    if (chainId === 1)
+      amountToReceive = await metapoolContract.methods.calc_token_amount(
+        pool.address,
+        amounts,
+        depositing
+      ).call();
+    else if (chainId === 56)
+      amountToReceive = await metapoolContract.methods.calculateTokenAmount(
+        address,
+        amounts, 
+        depositing
+      ).call();
 
     return amountToReceive;
 
@@ -896,9 +923,17 @@ class Store {
     let dyUnderlying= '';
 
     if (chainId === 1)
-      dyUnderlying = await contract.methods.get_dy_underlying(from, to, amount).call()
+      dyUnderlying = await contract.methods.get_dy_underlying(
+        from,
+        to, 
+        amount
+      ).call();
     else if (chainId === 56)
-      dyUnderlying = await contract.methods.calculateSwapUnderlying(from, to, amount).call()
+      dyUnderlying = await contract.methods.calculateSwapUnderlying(
+        from,
+        to,
+        amount
+      ).call();
 
     return dyUnderlying;
 
@@ -906,19 +941,19 @@ class Store {
 
   _callAddLiquidity = async (web3, account, pool, amounts, callback) => {
 
-    const metapoolContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress)
+    const metapoolContract = new web3.eth.Contract(pool.liquidityABI, pool.liquidityAddress);
     const chainId = parseFloat(web3.currentProvider.networkVersion);
 
     
-    let receive = '0'
+    let receive = '0';
     try {
       const amountToReceive = await this._calcTokenAmount(account.address, pool, amounts, true);
       receive = new BigNumber(amountToReceive)
         .times(95)
         .dividedBy(100)
-        .toFixed(0)
+        .toFixed(0);
     } catch(ex) {
-      console.log(ex)
+      console.log(ex);
       // if we can't calculate, we need to check the totalSupply
       // if 0, we just set receive to 0
       // if not 0, we throw an exception because it shouldn't be.
@@ -927,7 +962,7 @@ class Store {
       if(parseFloat(totalSupply) === 0) {
         receive = '0'
       } else {
-        return callback(ex)
+        return callback(ex);
       }
     }
 
@@ -935,45 +970,45 @@ class Store {
       metapoolContract.methods.add_liquidity(pool.address, amounts, receive).send({ from: account.address })
       .on('transactionHash', function(hash){
         emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
-        callback(null, hash)
+        callback(null, hash);
       })
       .on('confirmation', function(confirmationNumber, receipt){
         if(confirmationNumber === 1) {
-          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+          dispatcher.dispatch({ type: CONFIGURE, content: {} });
         }
       })
       .on('receipt', function(receipt){
-        dispatcher.dispatch({ type: CONFIGURE, content: {} })
-        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
+        dispatcher.dispatch({ type: CONFIGURE, content: {} });
+        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash);
       })
       .on('error', function(error) {
         if(error.message) {
-          return callback(error.message)
+          return callback(error.message);
         }
-        callback(error)
+        callback(error);
       })
     } else if (chainId === 56) {
       // trade deadline
       const deadline = Math.floor(Date.now() / 1000) + 60 * 10;
       metapoolContract.methods.addLiquidity(amounts, receive, deadline).send({ from: account.address })
       .on('transactionHash', function(hash){
-        emitter.emit(SNACKBAR_TRANSACTION_HASH, hash)
-        callback(null, hash)
+        emitter.emit(SNACKBAR_TRANSACTION_HASH, hash);
+        callback(null, hash);
       })
       .on('confirmation', function(confirmationNumber, receipt){
         if(confirmationNumber === 1) {
-          dispatcher.dispatch({ type: CONFIGURE, content: {} })
+          dispatcher.dispatch({ type: CONFIGURE, content: {} });
         }
       })
       .on('receipt', function(receipt){
-        dispatcher.dispatch({ type: CONFIGURE, content: {} })
-        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash)
+        dispatcher.dispatch({ type: CONFIGURE, content: {} });
+        emitter.emit(SNACKBAR_TRANSACTION_RECEIPT, receipt.transactionHash);
       })
       .on('error', function(error) {
         if(error.message) {
-          return callback(error.message)
+          return callback(error.message);
         }
-        callback(error)
+        callback(error);
       })
     }
   }

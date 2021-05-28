@@ -866,7 +866,7 @@ class Liquidity extends Component {
 
     // format message 
     let poolName = `${collateral} - ${paired}`;
-    if (showSymbol) poolName +=  `(${rcSymbol})`;
+    if (showSymbol) poolName +=  ` (${rcSymbol})`;
 
     return(poolName);
 
