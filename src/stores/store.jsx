@@ -576,8 +576,15 @@ class Store {
       const config = await this._getConfig();
       const chainId = parseFloat(web3.currentProvider.networkVersion);
       // list of pools to exclude
-      const exclude = ["Curve.fi Factory USD Metapool: RC_WETH_1650_DAI_2021_4_30", "Curve.fi Factory USD Metapool: RC_WBTC_25000_2021_3_31"];
-      const addrBlacklist = ["0x112001947E8a5D54016D20CAc4d84779Bc48e75C", "0x8B93c5727fF8c0e4CD16f8ae8dFe4DAc8730C4BE"];
+      const exclude = [
+        "Curve.fi Factory USD Metapool: RC_WETH_1650_DAI_2021_4_30", 
+        "Curve.fi Factory USD Metapool: RC_WBTC_25000_2021_3_31"
+      ];
+      const addrBlacklist = [
+        "0x112001947E8a5D54016D20CAc4d84779Bc48e75C", 
+        "0x8B93c5727fF8c0e4CD16f8ae8dFe4DAc8730C4BE",
+        "0xd97f71Bc0Ecb40B105dBACF5225d847d9c2334F8"
+      ];
 
       if (addrBlacklist.includes(pool.address)) {
         callback(true, {});
