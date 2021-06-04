@@ -344,7 +344,7 @@ class Store {
 
     try {
 
-      const { pool } = payload.content
+      const { pool } = payload.content;
 
       // update url
       window.history.pushState({}, null, pool.address); 
@@ -353,11 +353,11 @@ class Store {
       const underlyingBalances = await this._getUnderlyingBalances(pool);
 
       // update store values
-      store.setStore({ selectedPool: pool})
-      store.setStore({ underlyingBalances })
+      store.setStore({ selectedPool: pool});
+      store.setStore({ underlyingBalances });
 
       // emit 
-      emitter.emit(SELECTED_POOL_CHANGED)
+      emitter.emit(SELECTED_POOL_CHANGED);
 
     } catch (ex) {
 
@@ -371,7 +371,7 @@ class Store {
   // get the config for the correct chain
   _getConfig = async () => {
 
-      const web3 = await this._getWeb3Provider()
+      const web3 = await this._getWeb3Provider();
 
       const chainId = parseFloat(web3.currentProvider.networkVersion);
       const _config = config[chainId];
@@ -393,7 +393,10 @@ class Store {
       let pools;
 
       // get the factory contract
-      const curveFactoryContract = new web3.eth.Contract(config.curveFactoryV2ABI, config.curveFactoryV2Address);
+      const curveFactoryContract = new web3.eth.Contract(
+        config.curveFactoryV2ABI, 
+        config.curveFactoryV2Address
+      );
 
       if (chainId === 1) {
 
@@ -401,14 +404,17 @@ class Store {
 
         pools = await Promise.all([...Array(parseInt(poolCount)).keys()].map(
           i => curveFactoryContract.methods.pool_list(i).call()
-        ))
+        ));
+
+        // remove duplicates
+        pools = [...new Set(pools)];
 
         return pools.map((poolAddress) => {
           return {
             version: 2,
             address: poolAddress
           }
-        })
+        });
 
 
       } else if (chainId === 56) {
@@ -418,8 +424,10 @@ class Store {
         pools = await Promise.all([...Array(parseInt(poolCount)).keys()].map(async (i) => {
           const poolData = (await curveFactoryContract.methods.metaSwapPoolInfo(i).call())
           return poolData;
-        }))
+        }));
 
+        // remove duplicates
+        pools = [...new Set(pools)];
 
         return pools.map((poolData) => {
           return {
