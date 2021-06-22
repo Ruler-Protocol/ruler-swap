@@ -478,7 +478,7 @@ class Liquidity extends Component {
       else
         selectedPool.chainId === 1 ? 
           amounts.push(futureState[selectedPool.assets[i].symbol+'Amount']) :
-          amounts.push((parseFloat(poolAmount)/4).toString())
+          amounts.push((parseFloat(poolAmount)/4.5).toString())
     }
 
     let index;
@@ -588,33 +588,42 @@ class Liquidity extends Component {
       } else if (selectedPool.chainId === 56) {
 
         if (receiveAmounts) {
-
           let unused = 0;
           let largest = 0;
           let index = 0;
 
-          receiveAmounts.forEach(function(receive, i){
+          // get the sum of the amounts returned
+          const sum = receiveAmounts.reduce((a, b) => parseFloat(a) + parseFloat(b))
 
+          // get difference if sum is greater than the input amount
+          const diff = (sum - parseFloat(futureState['poolAmount']))
+
+          receiveAmounts.forEach(function (receive, i) {
             if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
-
               // keep track of largest
-              if (receive > largest) { 
+              if (receive > largest) {
                 largest = receive;
                 index = i;
               }
 
-              // update state value
-              futureState[`${selectedPool.assets[i].symbol}Amount`] = receive;
-          
+              // update state value and scale by slippage / difference if needed
+              if (diff > 0)
+                futureState[`${selectedPool.assets[i].symbol}Amount`] =
+                  receive - (diff / 4) * Math.abs(slippage * 100);
+              else 
+                futureState[`${selectedPool.assets[i].symbol}Amount`] = receive 
+
             } else {
               unused += parseFloat(receiveAmounts[i]);
-              futureState[`${selectedPool.assets[i].symbol}Amount`] = '0';
+              futureState[`${selectedPool.assets[i].symbol}Amount`] = "0";
             }
 
           });
 
-          // add unused 
-          futureState[`${selectedPool.assets[index].symbol}Amount`] = parseFloat(futureState[`${selectedPool.assets[index].symbol}Amount`]) + parseFloat(unused);
+          // add unused to asset with largest percentage in pool
+          futureState[`${selectedPool.assets[index].symbol}Amount`] = parseFloat(
+            futureState[`${selectedPool.assets[index].symbol}Amount`]
+          ) + parseFloat(unused);
 
         } else {
           selectedPool.assets.forEach(function(receive, i){

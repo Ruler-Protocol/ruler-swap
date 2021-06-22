@@ -331,7 +331,7 @@ class Store {
         let loadedPools = store.getStore("pools");
         loadedPools.push(poolData);
         store.setStore({loadedPools});
-        
+
         // emit configure_returned once pools are loaded
         if (dataCount++ === pools.length - 1) 
           emitter.emit(CONFIGURE_RETURNED)
@@ -470,6 +470,12 @@ class Store {
         balances = await contract.methods.get_underlying_balances(pool.address).call()
         // only keep what's needed
         balances = balances.slice(0, pool.assets.length);
+        // custom vVSP logic
+        // if (pool.address === '0xd752B367B1d5998446daA6E9Eb90d05D12d9f263') {
+          // const erc20Contract = new web3.eth.Contract(config.erc20ABI, pool.address);
+          // const bal = await erc20Contract.methods.balanceOf('0x3423c8af3a95d9fee7ec06c4e0e905d4fd559f89').call();
+          // balances[0] = bal;
+        // }
       } else if(chainId === 56) {
         // get the pool balances
         balances = await Promise.all([...new Array(2)].map(async (num, index) => {
