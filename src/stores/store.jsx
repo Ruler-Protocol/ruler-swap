@@ -1612,8 +1612,10 @@ class Store {
         // update decimals for receive amount calculation
         decimals = pool.assets[index].decimals;
       }
-
+     
+      // vVSP has insane virt price at the moment which throws off receiveAmount
       const receiveAmount = bnToFixed(receiveAmountBn, decimals)
+
       const virtPrice = bnToFixed(virtPriceBn, 18)
       let slippage;
 
@@ -1634,7 +1636,13 @@ class Store {
 
       slippage = (virtualValue / realValue) - 1;
 
-      emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {withdrawAmount: receiveAmount, direction, slippage, receiveAmounts})
+      emitter.emit(GET_WITHDRAW_AMOUNT_RETURNED, {
+        withdrawAmount: receiveAmount,
+        direction,
+        slippage,
+        receiveAmounts,
+        virtPrice
+      });
 
       emitter.emit(SLIPPAGE_INFO_RETURNED, {
         slippagePcent: typeof slippage !== 'undefined' ? slippage * 100 : slippage,
