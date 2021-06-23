@@ -466,6 +466,10 @@ class Liquidity extends Component {
     else 
       this.setState({ poolAmountError: false })
 
+    const divide = withdrawAsset.length === 2 || withdrawAsset.length === 3
+      ? 4.5
+      : 4;
+
     // amounts for slippage
     let amounts = [];
     for(let i = 0; i < selectedPool.assets.length; i++) {
@@ -478,7 +482,7 @@ class Liquidity extends Component {
       else
         selectedPool.chainId === 1 ? 
           amounts.push(futureState[selectedPool.assets[i].symbol+'Amount']) :
-          amounts.push((parseFloat(poolAmount)/4.5).toString())
+          amounts.push((parseFloat(poolAmount)/divide).toString())
     }
 
     let index;
@@ -608,9 +612,9 @@ class Liquidity extends Component {
               // update state value and scale by slippage / difference if needed
               if (diff > 0)
                 futureState[`${selectedPool.assets[i].symbol}Amount`] =
-                  receive - (diff / 4) * Math.abs(slippage * 100);
+                  (receive - (diff / 4) * Math.abs(slippage * 100) * virtPrice).toFixed(5);
               else 
-                futureState[`${selectedPool.assets[i].symbol}Amount`] = receive 
+                futureState[`${selectedPool.assets[i].symbol}Amount`] = (receive * virtPrice).toFixed(5);
 
             } else {
               unused += parseFloat(receiveAmounts[i]);
