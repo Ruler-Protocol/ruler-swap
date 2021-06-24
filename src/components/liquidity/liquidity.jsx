@@ -490,7 +490,11 @@ class Liquidity extends Component {
       index = selectedPool.assets.findIndex(asset => asset.symbol === withdrawAsset[0]);
 
     // don't get amounts if there are any bad values
-    if (amounts.filter(value => isNaN(value)).length > 0) return;
+    if (
+      amounts.filter((value) => isNaN(value)).length > 0 ||
+      parseFloat(poolAmount) === 0
+    )
+      return;
 
     dispatcher.dispatch({
       type: GET_WITHDRAW_AMOUNT, 
@@ -599,7 +603,8 @@ class Liquidity extends Component {
           const sum = receiveAmounts.reduce((a, b) => parseFloat(a) + parseFloat(b))
 
           // get difference if sum is greater than the input amount
-          const diff = (sum - parseFloat(futureState['poolAmount']))
+          let diff = (sum - parseFloat(futureState['poolAmount']))
+          if (diff < 0) diff = 0;
 
           receiveAmounts.forEach(function (receive, i) {
             if (withdrawAsset.indexOf(selectedPool.assets[i].symbol) > -1) {
@@ -610,14 +615,10 @@ class Liquidity extends Component {
               }
 
               // update state value and scale by slippage / difference if needed
-              if (diff > 0)
-                futureState[`${selectedPool.assets[i].symbol}Amount`] =
-                  (receive - (diff / 4) * Math.abs(slippage * 100) * virtPrice).toFixed(5);
-              else 
-                futureState[`${selectedPool.assets[i].symbol}Amount`] = (receive * virtPrice).toFixed(5);
+              futureState[`${selectedPool.assets[i].symbol}Amount`] = ((receive - (diff/4)) * virtPrice);
 
             } else {
-              unused += parseFloat(receiveAmounts[i]);
+              unused += parseFloat((receive - (diff/4)));
               futureState[`${selectedPool.assets[i].symbol}Amount`] = "0";
             }
 
@@ -1154,31 +1155,52 @@ class Liquidity extends Component {
 
     return (
       <React.Fragment>
-        { this.renderPoolSelectInput() }
-        {
-          selectedPool && selectedPool.assets && selectedPool.assets.length > 0 && selectedPool.assets.map((asset) => {
-            return this.renderAssetInput(asset, 'withdraw')
-          })
-        }
-        { this.renderAssetSelect("Withdraw In") }
-        { withdrawAsset.length > 1 && withdrawAsset.length < selectedPool.assets.length ? 
-        <div className={classes.alert}>
-        <Alert severity="info">If you withdraw 2-3 assets only, due to <a href="https://curve.readthedocs.io/factory-pools.html#StableSwap.remove_liquidity_imbalance" rel="noopener noreferrer" target="_blank">Curve calculation</a>, you will be left with some dust</Alert> 
-        </div>
-        : ''}
-        { showSlippage ? <SlippageInfo slippagePcent={slippagePcent} /> : ''}
+        {this.renderPoolSelectInput()}
+        {selectedPool &&
+          selectedPool.assets &&
+          selectedPool.assets.length > 0 &&
+          selectedPool.assets.map((asset) => {
+            return this.renderAssetInput(asset, "withdraw");
+          })}
+        {this.renderAssetSelect("Withdraw In")}
+        {withdrawAsset.length > 1 &&
+        withdrawAsset.length < selectedPool.assets.length ? (
+          <div className={classes.alert}>
+            <Alert severity="info">
+              If you withdraw 2-3 assets only, the RC token must be selected,
+              and due to{" "}
+              <a
+                href="https://curve.readthedocs.io/factory-pools.html#StableSwap.remove_liquidity_imbalance"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                Curve calculation
+              </a>
+              , you will be left with some dust
+            </Alert>
+          </div>
+        ) : (
+          ""
+        )}
+        {showSlippage ? <SlippageInfo slippagePcent={slippagePcent} /> : ""}
         <Button
-          className={ classes.actionButton }
+          className={classes.actionButton}
           variant="outlined"
           color="primary"
-          disabled={ disabled }
-          onClick={ this.onWithdraw }
+          disabled={disabled}
+          onClick={this.onWithdraw}
           fullWidth
+        >
+          <Typography
+            className={classes.buttonText}
+            variant={"h4"}
+            color="secondary"
           >
-          <Typography className={ classes.buttonText } variant={ 'h4'} color='secondary'>{ 'Withdraw' }</Typography>
+            {"Withdraw"}
+          </Typography>
         </Button>
       </React.Fragment>
-    )
+    );
   }
 
   startLoading = () => {
@@ -1322,14 +1344,19 @@ class Liquidity extends Component {
 
     let assets = [...withdrawAsset];
 
+    const change = event.target.checked ? 1 : -1;
+
     // modify withdraw asset array
-    if (!event.target.checked)
+    if (!event.target.checked) {
       assets.splice(withdrawAsset.indexOf(event.target.value), 1);
-    else
+    } else
       assets.push(event.target.value);
 
-    // update
-    newStateSlice['withdrawAsset'] = assets;
+    if (withdrawAsset.length + change === 2 || withdrawAsset.length + change === 3)
+      assets.push(selectedPool.assets[0].symbol);
+
+    // update and remove duplicates
+    newStateSlice['withdrawAsset'] = [...new Set(assets)];
 
     this.setState(newStateSlice);
     this.getWithdrawAmount(newStateSlice);
