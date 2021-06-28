@@ -589,7 +589,9 @@ class Store {
       const addrBlacklist = [
         "0x112001947E8a5D54016D20CAc4d84779Bc48e75C", 
         "0x8B93c5727fF8c0e4CD16f8ae8dFe4DAc8730C4BE",
-        "0xd97f71Bc0Ecb40B105dBACF5225d847d9c2334F8"
+        "0xd97f71Bc0Ecb40B105dBACF5225d847d9c2334F8",
+        "0x3279827b8233Ab455ba6F6bcB9804ee601Bf725B",
+        "0x0c46aC7dC6a06Fa5de5a6e74c0726F96c0319900"
       ];
 
       if (addrBlacklist.includes(pool.address)) {
