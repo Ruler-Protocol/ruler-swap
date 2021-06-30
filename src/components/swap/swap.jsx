@@ -565,9 +565,6 @@ class Swap extends Component {
     const { classes } = this.props;
     const { showExpired } = this.state;
 
-    if (option.address === '0x3279827b8233Ab455ba6F6bcB9804ee601Bf725B')
-      console.log(option);
-
     // "Curve.fi Factory USD Metapool: RC_PUNK-B_10000_DAI_2021_4_30" => RC_PUNK-B_10000_DAI_2021_4_30
     let name;
     if (option && option.chainId === 1)

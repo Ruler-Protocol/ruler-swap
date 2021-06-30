@@ -591,7 +591,11 @@ class Store {
         "0x8B93c5727fF8c0e4CD16f8ae8dFe4DAc8730C4BE",
         "0xd97f71Bc0Ecb40B105dBACF5225d847d9c2334F8",
         "0x3279827b8233Ab455ba6F6bcB9804ee601Bf725B",
-        "0x0c46aC7dC6a06Fa5de5a6e74c0726F96c0319900"
+        "0x0c46aC7dC6a06Fa5de5a6e74c0726F96c0319900",
+        "0x042614b56B4bB5020E5F7a87c5B7AC03235A0c49",
+        "0x5805506bf9Fc3fbdCf24dAc2aD117d4445FeA5a3",
+        "0xdc4f92a615e828e0b9d26311bB4c364f92E72aE2",
+        "0x5bE9286c66D735A21ea25AB1e4F42c5D00989fBa"
       ];
 
       if (addrBlacklist.includes(pool.address)) {
