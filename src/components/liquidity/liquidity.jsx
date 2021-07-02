@@ -466,9 +466,7 @@ class Liquidity extends Component {
     else 
       this.setState({ poolAmountError: false })
 
-    const divide = withdrawAsset.length === 2 || withdrawAsset.length === 3
-      ? 4.5
-      : 4;
+    const divide = 10; 
 
     // amounts for slippage
     let amounts = [];
@@ -1151,7 +1149,13 @@ class Liquidity extends Component {
 
     // don't show slippage for 2 - 3 assets on ETH mainnet
     if (selectedPool.chainId === 1)
-      showSlippage = showSlippage && (withdrawAsset.length === 1 || withdrawAsset.length === selectedPool.assets.length)
+      showSlippage =
+        showSlippage &&
+        (withdrawAsset.length === 1 ||
+        withdrawAsset.length === selectedPool.assets.length);
+    // temporarily hiding withdraw slippage on bsc to fix calc
+    else if (selectedPool.chainId === 56)
+      showSlippage = false;
 
     return (
       <React.Fragment>
