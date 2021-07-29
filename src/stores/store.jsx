@@ -596,7 +596,8 @@ class Store {
         "0x5805506bf9Fc3fbdCf24dAc2aD117d4445FeA5a3",
         "0xdc4f92a615e828e0b9d26311bB4c364f92E72aE2",
         "0x5bE9286c66D735A21ea25AB1e4F42c5D00989fBa",
-        "0x8456c858768Cd925806b1C1470A5d286cf9C6882"
+        "0x8456c858768Cd925806b1C1470A5d286cf9C6882",
+        '0x0f586eFF546f43C301b581093e2e5C6aA8f34b2A',
       ];
 
       if (addrBlacklist.includes(pool.address)) {
